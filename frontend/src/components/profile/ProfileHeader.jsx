@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, CircularProgress } from '@mui/material';
-import { Edit as EditIcon, CameraAlt, PersonAdd, Share } from '@mui/icons-material';
+import { Edit as EditIcon, CameraAlt, PersonAdd, Share, GroupAdd, Close } from '@mui/icons-material';
 
 const DEFAULT_COVER = '/images/Default Cover.png';
 const DEFAULT_PROFILE = '/images/Default Profile Pic.png';
@@ -13,7 +13,11 @@ export default function ProfileHeader({
   isFollowing,
   onFollow,
   onShare,
-  followLoading
+  followLoading,
+  isFriend,
+  onSendFriendRequest,
+  friendRequestLoading,
+  hasPendingFriendRequest
 }) {
   console.log('Profile Picture:', user?.profilePicture || DEFAULT_PROFILE); // Debug log
   return (
@@ -103,6 +107,29 @@ export default function ProfileHeader({
               >
                 {isFollowing ? 'Following' : 'Follow'}
               </Button>
+              {!isFriend && (
+                <Button
+                  variant={hasPendingFriendRequest ? "outlined" : "contained"}
+                  onClick={onSendFriendRequest}
+                  disabled={friendRequestLoading}
+                  startIcon={friendRequestLoading ? 
+                    <CircularProgress size={20} /> : 
+                    hasPendingFriendRequest ? <Close /> : <GroupAdd />
+                  }
+                  sx={{
+                    backgroundColor: hasPendingFriendRequest ? 'transparent' : '#002B5B',
+                    borderColor: '#002B5B',
+                    color: hasPendingFriendRequest ? '#002B5B' : 'white',
+                    '&:hover': {
+                      backgroundColor: hasPendingFriendRequest ? 'rgba(244, 67, 54, 0.04)' : '#001B3B',
+                      borderColor: hasPendingFriendRequest ? '#f44336' : '#001B3B',
+                      color: hasPendingFriendRequest ? '#f44336' : 'white',
+                    }
+                  }}
+                >
+                  {hasPendingFriendRequest ? 'Cancel Request' : 'Add Friend'}
+                </Button>
+              )}
             </>
           )}
           <Button

@@ -1,29 +1,59 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { TextField, Button, Paper, Alert } from '@mui/material';
+import { 
+  TextField, 
+  Button, 
+  Paper, 
+  Alert, 
+  Box, 
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  Divider,
+  Typography
+} from '@mui/material';
+import { motion } from 'framer-motion';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { 
+  Google, 
+  Person,
+  Visibility, 
+  VisibilityOff,
+  GitHub,
+  Facebook
+} from '@mui/icons-material';
 
 function SignIn() {
   const [formData, setFormData] = useState({
     username: '',
-    password: ''
+    password: '',
+    showPassword: false
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(null);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    if (!formData.username || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
     setLoading(true);
     
     try {
-      const response = await api.post('/api/auth/login', formData);
+      const response = await api.post('/api/auth/login', {
+        username: formData.username,
+        password: formData.password
+      });
       
       if (response.data) {
-        // Call the login function from AuthContext
         await login(response.data);
         navigate('/home');
       }
@@ -41,72 +71,275 @@ function SignIn() {
     });
   };
 
+  const handleClickShowPassword = () => {
+    setFormData({
+      ...formData,
+      showPassword: !formData.showPassword
+    });
+  };
+
+  const handleSocialSignIn = (provider) => {
+    setSocialLoading(provider);
+    // Implement social sign-in logic here
+    console.log(`${provider} Sign In clicked`);
+    setTimeout(() => {
+      setSocialLoading(null);
+    }, 2000);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Paper className="max-w-md w-full space-y-8 p-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-[#002B5B]">
-            Sign in to your account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="w-full max-w-md"
+      >
+        <Paper elevation={6} className="p-8 rounded-2xl shadow-xl bg-white">
+          {/* Logo Section */}
+          <div className="text-center mb-8">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mx-auto w-20 h-20 relative mb-4"
+            >
+              <img
+                src="/Logo.png"
+                alt="SkillHive Logo"
+                className="w-full h-full"
+              />
+            </motion.div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+              className="text-3xl font-bold text-[#002B5B] mb-2"
+            >
+              SKILL HIVE
+            </motion.h1>
+            {/* <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+              className="text-gray-600"
+            >
+              Sign in to continue your skill development journey
+            </motion.p> */}
+          </div>
+
+          {/* Error Message */}
           {error && (
-            <Alert severity="error" className="mb-4">
-              {error}
-            </Alert>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6"
+            >
+              <Alert severity="error" className="rounded-lg">
+                {error}
+              </Alert>
+            </motion.div>
           )}
-          <div className="space-y-4">
-            <TextField
-              label="Username"
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              fullWidth
-              autoComplete="username"
-            />
-            <TextField
-              label="Password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              fullWidth
-              autoComplete="current-password"
-            />
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <Link to="/forgot-password" className="text-[#F7931E] hover:text-[#002B5B]">
-                Forgot your password?
+          {/* Sign In Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.5 }}
+            >
+              <TextField
+                label="Username"
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                fullWidth
+                variant="outlined"
+                placeholder="Enter your username"
+                InputProps={{
+                  className: 'rounded-lg',
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Person className="text-gray-400" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.6 }}
+            >
+              <TextField
+                label="Password"
+                type={formData.showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                fullWidth
+                variant="outlined"
+                placeholder="••••••••"
+                InputProps={{
+                  className: 'rounded-lg',
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                      </svg>
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        edge="end"
+                        size="small"
+                      >
+                        {formData.showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.7 }}
+              className="flex justify-end"
+            >
+              <Link 
+                to="/forgot-password" 
+                className="text-sm text-[#F7931E] hover:text-[#002B5B] font-medium"
+              >
+                Forgot password?
               </Link>
-            </div>
-          </div>
+            </motion.div>
 
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            className="bg-[#002B5B] hover:bg-[#F7931E]"
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.8 }}
+            >
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={loading}
+                className="py-3 rounded-lg bg-gradient-to-r from-[#F7931E] to-[#002B5B] hover:from-[#002B5B] hover:to-[#F7931E] text-white transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+                {loading ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <CircularProgress size={24} color="inherit" className="mr-2" />
+                    Signing In...
+                  </Box>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </motion.div>
+          </form>
+
+          {/* Divider */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.9 }}
+            className="my-6"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </Button>
+            <Divider>
+              <Typography variant="body2" className="text-gray-500 px-2">
+                OR CONTINUE WITH
+              </Typography>
+            </Divider>
+          </motion.div>
 
-          <div className="text-center mt-4">
-            <span className="text-gray-600">Don't have an account? </span>
-            <Link to="/signup" className="text-[#F7931E] hover:text-[#002B5B]">
-              Sign up
+          {/* Social Sign In */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 1 }}
+            className="grid"
+          >
+            <Button
+              variant="outlined"
+              onClick={() => handleSocialSignIn('google')}
+              disabled={socialLoading === 'google'}
+              className="py-2 rounded-lg border-gray-300 hover:border-[#002B5B]"
+              startIcon={socialLoading === 'google' ? <CircularProgress size={20} /> : <Google />}
+            >
+              {socialLoading === 'google' ? '' : 'Google'}
+            </Button>
+
+            {/* <Button
+              variant="outlined"
+              onClick={() => handleSocialSignIn('facebook')}
+              disabled={socialLoading === 'facebook'}
+              className="py-2 rounded-lg border-gray-300 hover:border-[#002B5B]"
+              startIcon={socialLoading === 'facebook' ? <CircularProgress size={20} /> : <Facebook />}
+            >
+              {socialLoading === 'facebook' ? '' : 'Facebook'}
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={() => handleSocialSignIn('github')}
+              disabled={socialLoading === 'github'}
+              className="py-2 rounded-lg border-gray-300 hover:border-[#002B5B]"
+              startIcon={socialLoading === 'github' ? <CircularProgress size={20} /> : <GitHub />}
+            >
+              {socialLoading === 'github' ? '' : 'GitHub'}
+            </Button> */}
+          </motion.div>
+
+          {/* Sign Up Link */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 1.1 }}
+            className="mt-8 text-center"
+          >
+            <Typography variant="body2" className="text-gray-600">
+              Don't have an account?{' '}
+              <Link 
+                to="/signup" 
+                className="text-[#F7931E] hover:text-[#002B5B] font-medium"
+              >
+                Sign up
+              </Link>
+            </Typography>
+          </motion.div>
+        </Paper>
+
+        {/* Terms and Conditions */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 1.2 }}
+          className="mt-6 text-center"
+        >
+          <Typography variant="caption" className="text-gray-500">
+            By continuing, you agree to our{' '}
+            <Link to="/terms" className="text-[#F7931E] hover:underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="text-[#F7931E] hover:underline">
+              Privacy Policy
             </Link>
-          </div>
-        </form>
-      </Paper>
+          </Typography>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
 
-export default SignIn; 
+export default SignIn;

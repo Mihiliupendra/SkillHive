@@ -288,14 +288,6 @@ export default function Navbar() {
                       <span>View Profile</span>
                     </Link>
                     <Link 
-                      to="/calendar" 
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center px-4 py-2.5 text-sm text-[#002B5B] hover:bg-[#F7931E]/10 transition-colors"
-                    >
-                      <i className="material-icons text-[#F7931E] mr-3">calendar_today</i>
-                      <span>Calendar</span>
-                    </Link>
-                    <Link 
                       to="/settings" 
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center px-4 py-2.5 text-sm text-[#002B5B] hover:bg-[#F7931E]/10 transition-colors"
@@ -303,20 +295,13 @@ export default function Navbar() {
                       <i className="material-icons text-[#F7931E] mr-3">settings</i>
                       <span>Settings</span>
                     </Link>
-                    
-                    <div className="border-t border-gray-100 my-1"></div>
-                    
-                    <motion.button 
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        handleLogout();
-                      }}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-[#002B5B] hover:bg-[#F7931E]/10 transition-colors"
-                      whileHover={{ x: 2 }}
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
-                      <i className="material-icons text-[#F7931E] mr-3">logout</i>
-                      <span>Logout</span>
-                    </motion.button>
+                      <i className="material-icons text-red-600 mr-3">logout</i>
+                      <span>Sign Out</span>
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>

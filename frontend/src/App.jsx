@@ -7,6 +7,7 @@ import Profile from './components/profile/Profile';
 import Home from './pages/Home';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 // In your router file (e.g., App.js or routes.js)
 import Connections from './pages/Connections';
@@ -96,7 +97,7 @@ function App() {
             path="/settings"
             element={
               <ProtectedRoute>
-                <div>Settings Page</div>
+                <Settings />
               </ProtectedRoute>
             }
           />

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from '../../api/axios';
+import { userService } from '../../api/userService';
 import { motion } from 'framer-motion';
 import { Paper, Avatar, Button, Badge, CircularProgress } from '@mui/material';
 import {
@@ -26,6 +27,9 @@ const Profile = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [friendRequestLoading, setFriendRequestLoading] = useState(false);
+  const [hasPendingFriendRequest, setHasPendingFriendRequest] = useState(false);
+  const [isFriend, setIsFriend] = useState(false);
 
   const fetchUserProfile = async () => {
     try {
@@ -36,6 +40,7 @@ const Profile = () => {
         throw new Error('No user ID provided');
       }
 
+      console.log('Fetching profile for userId:', userId);
       const [profileResponse, followingResponse] = await Promise.all([
         axios.get(`/api/users/${userId}/profile`),
         currentUser && userId !== currentUser.id 
@@ -43,11 +48,15 @@ const Profile = () => {
           : Promise.resolve({ data: [] })
       ]);
       
+      console.log('Full profile response:', profileResponse);
+      
       if (!profileResponse.data) {
         throw new Error('No data received from server');
       }
 
       const userData = profileResponse.data;
+      console.log('Raw user data from server:', userData);
+      console.log('Skills from server:', userData.skills);
       
       // Validate required fields
       if (!userData._id && !userData.id) {
@@ -62,13 +71,19 @@ const Profile = () => {
       }
 
       // Transform skills data to match the expected format
-      const userSkills = userData.skills ? userData.skills.map((skill, index) => ({
+      const userSkills = Array.isArray(userData.skills) ? userData.skills.map((skill, index) => ({
         id: index + 1,
-        name: typeof skill === 'string' ? skill : skill.name,
-        level: typeof skill === 'string' ? 'Beginner' : (skill.level || 'Beginner')
-      })) : [];
+        name: skill,
+        level: 'Beginner'
+      })) : (userData.skills ? Array.from(userData.skills).map((skill, index) => ({
+        id: index + 1,
+        name: skill,
+        level: 'Beginner'
+      })) : []);
 
-      setProfileData({
+      console.log('Transformed skills:', userSkills);
+
+      const transformedData = {
         id: userData._id || userData.id,
         fullName: `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'Anonymous User',
         firstName: userData.firstName || '',
@@ -91,7 +106,10 @@ const Profile = () => {
         education: [],
         projects: [],
         username: userData.username || ''
-      });
+      };
+
+      console.log('Final transformed data:', transformedData);
+      setProfileData(transformedData);
     } catch (err) {
       console.error('Error fetching user profile:', err);
       
@@ -152,6 +170,34 @@ const Profile = () => {
     console.log('Share profile clicked');
   };
 
+  const handleSendFriendRequest = async () => {
+    if (!currentUser || !userId) return;
+    
+    setFriendRequestLoading(true);
+    try {
+      if (hasPendingFriendRequest) {
+        // Cancel the friend request
+        await userService.cancelFriendRequest(currentUser.id, userId);
+        setHasPendingFriendRequest(false);
+      } else {
+        // Send new friend request
+        await userService.sendFriendRequest(currentUser.id, userId);
+        setHasPendingFriendRequest(true);
+      }
+      // Optionally refresh profile data
+      await fetchUserProfile();
+    } catch (err) {
+      console.error('Friend request action failed:', err);
+      // Show error notification to user
+      setError(hasPendingFriendRequest ? 
+        'Failed to cancel friend request. Please try again.' : 
+        'Failed to send friend request. Please try again.'
+      );
+    } finally {
+      setFriendRequestLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (userId) {
       fetchUserProfile();
@@ -178,6 +224,26 @@ const Profile = () => {
     };
 
     checkFollowStatus();
+  }, [currentUser, userId]);
+
+  useEffect(() => {
+    const checkFriendStatus = async () => {
+      if (!currentUser || !userId || userId === currentUser.id) return;
+      
+      try {
+        // Check pending sent requests
+        const sentRequests = await userService.getPendingSentFriendRequests(currentUser.id);
+        setHasPendingFriendRequest(sentRequests.some(request => request.receiverId === userId));
+        
+        // You might want to add an API endpoint to check if users are friends
+        // For now, we'll assume they're not friends (you should implement this)
+        setIsFriend(false);
+      } catch (err) {
+        console.error('Error checking friend status:', err);
+      }
+    };
+
+    checkFriendStatus();
   }, [currentUser, userId]);
 
   const handleEditProfile = () => {
@@ -236,6 +302,56 @@ const Profile = () => {
 
   const handleConnect = () => {
     console.log('Connect button clicked');
+  };
+
+  const handleSkillsUpdate = async (updatedSkills) => {
+    try {
+      console.log('Received updated skills in Profile:', updatedSkills);
+      
+      // Create a copy of the current profile data
+      const updatedProfileData = {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        professionalHeader: profileData.professionalHeader,
+        biography: profileData.biography,
+        country: profileData.country,
+        city: profileData.city,
+        // Send skills as an array of strings
+        skills: updatedSkills
+      };
+
+      console.log('Sending userData to server:', updatedProfileData);
+
+      const response = await axios.put(`/api/users/${userId}/profile`, updatedProfileData);
+      console.log('Server response:', response.data);
+      
+      const updatedData = response.data;
+
+      // Transform skills data to match the expected format
+      const userSkills = updatedData.skills ? updatedData.skills.map((skill, index) => ({
+        id: index + 1,
+        name: skill,
+        level: 'Beginner'
+      })) : [];
+
+      console.log('Transformed skills:', userSkills);
+
+      // Update the profile data with the new skills
+      setProfileData(prevData => {
+        const newData = {
+          ...prevData,
+          skills: userSkills
+        };
+        console.log('Updated profile data:', newData);
+        return newData;
+      });
+
+      // Refresh the profile data to ensure everything is in sync
+      await fetchUserProfile();
+    } catch (error) {
+      console.error('Error updating skills:', error);
+      throw error;
+    }
   };
 
   if (loading) {
@@ -310,6 +426,10 @@ const Profile = () => {
         onFollow={handleFollow}
         onShare={handleShare}
         followLoading={followLoading}
+        isFriend={isFriend}
+        onSendFriendRequest={handleSendFriendRequest}
+        friendRequestLoading={friendRequestLoading}
+        hasPendingFriendRequest={hasPendingFriendRequest}
       />
 
       <EditProfileModal
@@ -349,14 +469,17 @@ const Profile = () => {
                   Skills & Endorsements
                 </h3>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {(profileData.skills || []).slice(0, 5).map(skill => (
+                  {(profileData.skills || []).slice(0, 5).map((skill, index) => (
                     <span 
-                      key={skill.id}
+                      key={skill.id || index}
                       className="px-3 py-1 bg-[#F7931E]/10 text-[#002B5B] rounded-full text-sm"
                     >
                       {skill.name}
                     </span>
                   ))}
+                  {(!profileData.skills || profileData.skills.length === 0) && (
+                    <span className="text-[#002B5B]/60">No skills added yet</span>
+                  )}
                 </div>
                 <Button
                   fullWidth
@@ -408,7 +531,13 @@ const Profile = () => {
               {activeTab === 'about' && <ProfileAbout about={profileData.about} />}
               {activeTab === 'experience' && <ProfileExperience experience={profileData.experience} />}
               {activeTab === 'education' && <ProfileEducation education={profileData.education} />}
-              {activeTab === 'skills' && <ProfileSkills skills={profileData.skills} />}
+              {activeTab === 'skills' && (
+                <ProfileSkills 
+                  skills={profileData.skills} 
+                  isOwnProfile={isOwnProfile}
+                  onSkillsUpdate={handleSkillsUpdate}
+                />
+              )}
               {activeTab === 'projects' && <ProfileProjects projects={profileData.projects} />}
             </motion.div>
           </div>
