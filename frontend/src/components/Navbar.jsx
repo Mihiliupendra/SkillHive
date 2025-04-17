@@ -223,11 +223,11 @@ export default function Navbar() {
               Careers
             </NavLink>
             <NavLink 
-              to="/messages" 
-              icon="mail"
-              isActive={location.pathname.startsWith('/messages')}
+              to="/notification" 
+              icon="notifications"
+              isActive={location.pathname.startsWith('/notification')}
             >
-              Messages
+              Notification
             </NavLink>
           </div>
 
