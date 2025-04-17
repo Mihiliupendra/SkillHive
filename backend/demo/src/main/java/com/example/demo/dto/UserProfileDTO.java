@@ -4,6 +4,8 @@ import com.example.demo.model.User;
 import com.example.demo.repository.FollowRepository;
 import com.example.demo.repository.FriendshipRepository;
 import lombok.Data;
+import java.util.Set;
+import java.util.HashSet;
 
 @Data
 public class UserProfileDTO {
@@ -20,6 +22,7 @@ public class UserProfileDTO {
     private String coverPhoto;
     private boolean following;
     private boolean profileComplete;
+    private Set<String> skills = new HashSet<>();
 
     public static UserProfileDTO fromUser(User user, FollowRepository followRepository, FriendshipRepository friendshipRepository) {
         if (user == null) return null;
@@ -41,6 +44,7 @@ public class UserProfileDTO {
         dto.setProfileComplete(user.getFirstName() != null && 
                              user.getLastName() != null && 
                              user.getBiography() != null);
+        dto.setSkills(user.getSkills() != null ? user.getSkills() : new HashSet<>());
         return dto;
     }
 
