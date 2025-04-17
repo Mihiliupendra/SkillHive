@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Avatar, Badge } from '@mui/material';
+import { Paper } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
@@ -62,28 +62,6 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] px-16">
-      {/* Floating Notification Bell */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="fixed top-4 right-4 z-50 py-16"
-      >
-        <Badge 
-          badgeContent={userData.newNotifications} 
-          color="error"
-          overlap="circular"
-        >
-          <motion.button 
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
-          >
-            <span className="material-icons text-[#002B5B]">notifications</span>
-          </motion.button>
-        </Badge>
-      </motion.div>
-
       <div className="container mx-auto px-4 py-8">
         <motion.div 
           initial={{ opacity: 0 }}
