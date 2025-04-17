@@ -7,27 +7,36 @@ export default function ProfileSummary({
   title,
   profileViews,
   connections,
-  profileImage
+  profileImage,
+  variant = 'full' // 'full' for homepage, 'compact' for profile page
 }) {
   const userId = Cookies.get('userId');
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      {/* Background Cover */}
-      <div className="h-14 bg-gradient-to-r from-[#002B5B] to-[#F7931E]"></div>
+      {/* Background Cover - Only show in full variant */}
+      {variant === 'full' && (
+        <div className="h-14 bg-gradient-to-r from-[#002B5B] to-[#F7931E]"></div>
+      )}
       
       {/* Profile Info */}
-      <div className="relative px-4 pt-12 pb-4">
-        {/* Profile Image */}
-        <div className="absolute -top-10 left-4">
-          <Link to={`/profile/${userId}`}>
-            <img
-              src={profileImage}
-              alt={name}
-              className="w-[72px] h-[72px] rounded-full border-4 border-white hover:border-[#F7931E] transition-colors object-cover"
-            />
-          </Link>
-        </div>
+      <div className={`relative px-4 ${variant === 'full' ? 'pt-12' : 'pt-4'} pb-4`}>
+        {/* Profile Image - Only show in full variant */}
+        {variant === 'full' && (
+          <div className="absolute -top-10 left-4">
+            <Link to={`/profile/${userId}`}>
+              <img
+                src={profileImage || '/images/Default Profile Pic.png'}
+                alt={name}
+                className="w-[72px] h-[72px] rounded-full border-4 border-white hover:border-[#F7931E] transition-colors object-cover"
+                onError={(e) => {
+                  console.error('Error loading profile picture:', e);
+                  e.target.src = '/images/Default Profile Pic.png';
+                }}
+              />
+            </Link>
+          </div>
+        )}
 
         {/* User Info */}
         <div className="mb-4">
@@ -57,50 +66,53 @@ export default function ProfileSummary({
           </div>
         </div>
 
-        {/* Quick Links */}
-        <div className="border-t border-gray-200 mt-4 pt-4">
-          <h3 className="text-sm font-medium mb-3 text-[#002B5B]">Recent</h3>
-          <ul className="space-y-2">
-            <li>
-              <Link to="/groups" className="flex items-center text-sm text-[#002B5B]/70 hover:text-[#F7931E] transition-colors">
-                <span className="material-icons text-lg mr-2">group</span>
-                Web Development
-              </Link>
-            </li>
-            <li>
-              <Link to="/groups" className="flex items-center text-sm text-[#002B5B]/70 hover:text-[#F7931E] transition-colors">
-                <span className="material-icons text-lg mr-2">code</span>
-                JavaScript Group
-              </Link>
-            </li>
-            <li>
-              <Link to="/groups" className="flex items-center text-sm text-[#002B5B]/70 hover:text-[#F7931E] transition-colors">
-                <span className="material-icons text-lg mr-2">school</span>
-                UI/UX Design
-              </Link>
-            </li>
-          </ul>
-        </div>
+        {/* Quick Links - Only show in full variant */}
+        {variant === 'full' && (
+          <>
+            <div className="border-t border-gray-200 mt-4 pt-4">
+              <h3 className="text-sm font-medium mb-3 text-[#002B5B]">Recent</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/groups" className="flex items-center text-sm text-[#002B5B]/70 hover:text-[#F7931E] transition-colors">
+                    <span className="material-icons text-lg mr-2">group</span>
+                    Web Development
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/groups" className="flex items-center text-sm text-[#002B5B]/70 hover:text-[#F7931E] transition-colors">
+                    <span className="material-icons text-lg mr-2">code</span>
+                    JavaScript Group
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/groups" className="flex items-center text-sm text-[#002B5B]/70 hover:text-[#F7931E] transition-colors">
+                    <span className="material-icons text-lg mr-2">school</span>
+                    UI/UX Design
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-        {/* Groups Section */}
-        <div className="border-t border-gray-200 mt-4 pt-4">
-          <h3 className="text-sm font-medium mb-3 text-[#002B5B]">Groups</h3>
-          <ul className="space-y-2">
-            <li>
-              <Link to="/groups" className="flex items-center text-sm text-[#002B5B]/70 hover:text-[#F7931E] transition-colors">
-                <span className="material-icons text-lg mr-2">people</span>
-                Tech Professionals
-              </Link>
-            </li>
-            <li>
-              <Link to="/groups" className="flex items-center text-sm text-[#002B5B]/70 hover:text-[#F7931E] transition-colors">
-                <span className="material-icons text-lg mr-2">work</span>
-                Job Seekers
-              </Link>
-            </li>
-          </ul>
-        </div>
+            <div className="border-t border-gray-200 mt-4 pt-4">
+              <h3 className="text-sm font-medium mb-3 text-[#002B5B]">Groups</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/groups" className="flex items-center text-sm text-[#002B5B]/70 hover:text-[#F7931E] transition-colors">
+                    <span className="material-icons text-lg mr-2">people</span>
+                    Tech Professionals
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/groups" className="flex items-center text-sm text-[#002B5B]/70 hover:text-[#F7931E] transition-colors">
+                    <span className="material-icons text-lg mr-2">work</span>
+                    Job Seekers
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
-} 
+}

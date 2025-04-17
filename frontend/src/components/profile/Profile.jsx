@@ -15,6 +15,8 @@ import {
   ProfileSummary
 } from './components';
 import EditProfileModal from './components/EditProfileModal';
+import MutualFriends from './components/MutualFriends';
+import Dashboard from '../Dashboard';
 
 const Profile = () => {
   const { userId } = useParams();
@@ -48,68 +50,47 @@ const Profile = () => {
           : Promise.resolve({ data: [] })
       ]);
       
-      console.log('Full profile response:', profileResponse);
-      
       if (!profileResponse.data) {
         throw new Error('No data received from server');
       }
 
       const userData = profileResponse.data;
-      console.log('Raw user data from server:', userData);
-      console.log('Skills from server:', userData.skills);
-      
-      // Validate required fields
-      if (!userData._id && !userData.id) {
-        throw new Error('Invalid user data: missing ID');
-      }
-
-      // Check if current user is following this profile
-      if (followingResponse.data) {
-        setIsFollowing(followingResponse.data.some(user => 
-          (user._id || user.id) === userId
-        ));
-      }
-
-      // Transform skills data to match the expected format
-      const userSkills = Array.isArray(userData.skills) ? userData.skills.map((skill, index) => ({
-        id: index + 1,
-        name: skill,
-        level: 'Beginner'
-      })) : (userData.skills ? Array.from(userData.skills).map((skill, index) => ({
-        id: index + 1,
-        name: skill,
-        level: 'Beginner'
-      })) : []);
-
-      console.log('Transformed skills:', userSkills);
-
       const transformedData = {
-        id: userData._id || userData.id,
-        fullName: `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'Anonymous User',
-        firstName: userData.firstName || '',
-        lastName: userData.lastName || '',
-        headline: userData.professionalHeader || 'Software Engineer',
-        about: userData.biography || 'Passionate software engineer with expertise in full-stack development.',
-        biography: userData.biography || '',
-        professionalHeader: userData.professionalHeader || '',
-        profilePicture: userData.profilePicture || '/images/Default Profile Pic.png',
-        backgroundPicture: userData.coverPhoto || '/images/Default Cover.png',
-        country: userData.country || '',
-        city: userData.city || '',
+        ...userData,
+        fullName: `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'User',
+        headline: userData.professionalHeader || 'No headline yet',
+        about: userData.biography || 'No bio yet',
         location: userData.city && userData.country ? `${userData.city}, ${userData.country}` : 'Location not specified',
-        email: userData.email,
-        phone: userData.phone || '',
-        connectionsCount: userData.connections || 0,
-        profileViews: userData.profileViews || 0,
-        skills: userSkills,
-        experience: [],
-        education: [],
-        projects: [],
-        username: userData.username || ''
       };
 
-      console.log('Final transformed data:', transformedData);
       setProfileData(transformedData);
+
+      // Check both friend request status and friendship status
+      if (currentUser && userId !== currentUser.id) {
+        try {
+          // Check sent and received requests in parallel
+          const [sentRequests, receivedRequests] = await Promise.all([
+            userService.getPendingSentFriendRequests(currentUser.id),
+            userService.getPendingReceivedFriendRequests(currentUser.id)
+          ]);
+
+          // Check if there's a pending request in either direction
+          const hasSentPending = sentRequests.some(request => 
+            request.receiver?.id === userId || request.receiverId === userId
+          );
+          const hasReceivedPending = receivedRequests.some(request => 
+            request.sender?.id === userId || request.senderId === userId
+          );
+
+          setHasPendingFriendRequest(hasSentPending || hasReceivedPending);
+          
+          // You might want to also check if they are friends here if you have that endpoint
+          // const friendsResponse = await userService.getFriendsList(currentUser.id);
+          // setIsFriend(friendsResponse.some(friend => friend.id === userId));
+        } catch (err) {
+          console.error('Error checking friend status:', err);
+        }
+      }
     } catch (err) {
       console.error('Error fetching user profile:', err);
       
@@ -184,67 +165,61 @@ const Profile = () => {
         await userService.sendFriendRequest(currentUser.id, userId);
         setHasPendingFriendRequest(true);
       }
-      // Optionally refresh profile data
-      await fetchUserProfile();
+      
+      // Use the new comprehensive status check
+      const currentStatus = await userService.getPendingFriendRequestStatus(currentUser.id, userId);
+      
+      // Update state if it doesn't match the expected state
+      if (currentStatus !== hasPendingFriendRequest) {
+        setHasPendingFriendRequest(currentStatus);
+      }
     } catch (err) {
       console.error('Friend request action failed:', err);
-      // Show error notification to user
-      setError(hasPendingFriendRequest ? 
-        'Failed to cancel friend request. Please try again.' : 
-        'Failed to send friend request. Please try again.'
+      setError(err.response?.data?.message || 
+        (hasPendingFriendRequest ? 
+          'Failed to cancel friend request. Please try again.' : 
+          'Failed to send friend request. Please try again.'
+        )
       );
+      
+      // Verify the current status after error
+      try {
+        const currentStatus = await userService.getPendingFriendRequestStatus(currentUser.id, userId);
+        setHasPendingFriendRequest(currentStatus);
+      } catch (statusErr) {
+        console.error('Failed to verify friend request status:', statusErr);
+      }
     } finally {
       setFriendRequestLoading(false);
+    }
+  };
+
+  const checkFriendStatus = async () => {
+    if (!currentUser || !userId || userId === currentUser.id) return;
+    
+    try {
+      // Use the new comprehensive status check
+      const isPending = await userService.getPendingFriendRequestStatus(currentUser.id, userId);
+      console.log('Friend request status:', isPending);
+      setHasPendingFriendRequest(isPending);
+      
+      // You might want to add an API endpoint to check if users are friends
+      // For now, we'll assume they're not friends
+      setIsFriend(false);
+    } catch (err) {
+      console.error('Error checking friend status:', err);
     }
   };
 
   useEffect(() => {
     if (userId) {
       fetchUserProfile();
+      checkFriendStatus(); // Call checkFriendStatus here as well
     } else {
       setError('No user ID provided');
       setLoading(false);
     }
   }, [userId, currentUser]);
-
-  useEffect(() => {
-    const checkFollowStatus = async () => {
-      if (!currentUser || !userId || userId === currentUser.id) return;
-      
-      try {
-        const response = await axios.get(`/api/users/${currentUser.id}/following`);
-        if (response.data) {
-          setIsFollowing(response.data.some(user => 
-            (user._id || user.id) === userId
-          ));
-        }
-      } catch (err) {
-        console.error('Error checking follow status:', err);
-      }
-    };
-
-    checkFollowStatus();
-  }, [currentUser, userId]);
-
-  useEffect(() => {
-    const checkFriendStatus = async () => {
-      if (!currentUser || !userId || userId === currentUser.id) return;
-      
-      try {
-        // Check pending sent requests
-        const sentRequests = await userService.getPendingSentFriendRequests(currentUser.id);
-        setHasPendingFriendRequest(sentRequests.some(request => request.receiverId === userId));
-        
-        // You might want to add an API endpoint to check if users are friends
-        // For now, we'll assume they're not friends (you should implement this)
-        setIsFriend(false);
-      } catch (err) {
-        console.error('Error checking friend status:', err);
-      }
-    };
-
-    checkFriendStatus();
-  }, [currentUser, userId]);
 
   const handleEditProfile = () => {
     setIsEditModalOpen(true);
@@ -448,14 +423,28 @@ const Profile = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-            <ProfileSummary
+              <ProfileSummary
                 name={profileData.fullName}
                 title={profileData.headline}
-              profileViews={profileData.profileViews}
+                profileViews={profileData.profileViews}
                 connections={profileData.connectionsCount}
-                profileImage={profileData.profilePicture}
+                variant="compact"
               />
             </motion.div>
+
+            {/* Display mutual friends only if not own profile */}
+            {!isOwnProfile && currentUser && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <MutualFriends
+                  currentUserId={currentUser.id}
+                  profileUserId={userId}
+                />
+              </motion.div>
+            )}
 
             {/* Skills Preview */}
             <motion.div
@@ -528,6 +517,9 @@ const Profile = () => {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
+              {/* Dashboard Stats */}
+              <Dashboard profileData={profileData} />
+
               {activeTab === 'about' && <ProfileAbout about={profileData.about} />}
               {activeTab === 'experience' && <ProfileExperience experience={profileData.experience} />}
               {activeTab === 'education' && <ProfileEducation education={profileData.education} />}
