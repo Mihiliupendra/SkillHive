@@ -77,7 +77,7 @@ function App() {
             }
           />
           <Route
-            path="/messages"
+            path="/notification"
             element={
               <ProtectedRoute>
                 <div>Messages Page</div>
