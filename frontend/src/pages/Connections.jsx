@@ -118,34 +118,49 @@ const Connections = () => {
     
     try {
       setActionLoading(requestId);
+      setError(null); // Clear any existing errors
       console.log('Accepting friend request with ID:', requestId);
       
       // Find the request object to get full details
-      const request = friendRequests.find(req => req._id === requestId);
+      const request = friendRequests.find(req => req._id === requestId || req.id === requestId);
       if (!request) {
         console.error('Friend request not found:', requestId);
         return;
       }
       
       // Accept the friend request
-      await userService.acceptFriendRequest(requestId);
-      console.log('Successfully accepted friend request:', requestId);
+      const idToUse = request.id || request._id;
+      await userService.acceptFriendRequest(idToUse);
+      console.log('Successfully accepted friend request:', idToUse);
       
       // Remove the request from the list immediately
-      setFriendRequests(prev => prev.filter(req => req._id !== requestId));
+      setFriendRequests(prev => prev.filter(req => (req._id !== idToUse && req.id !== idToUse)));
       
-      // Refresh the friends list
-      const friendsRes = await axios.get(`/api/users/${targetUserId}/friends`);
-      const transformedFriends = transformData(friendsRes);
-      setFriends(transformedFriends);
-      
-      // Clear any existing errors
-      setError(null);
+      try {
+        // Refresh all connection lists in parallel
+        const [friendsRes, followersRes, followingRes] = await Promise.all([
+          axios.get(`/api/users/${targetUserId}/friends`),
+          axios.get(`/api/users/${targetUserId}/followers`),
+          axios.get(`/api/users/${targetUserId}/following`)
+        ]);
+
+        // Transform and update the data
+        setFriends(transformData(friendsRes));
+        setFollowers(transformData(followersRes));
+        setFollowing(transformData(followingRes));
+      } catch (refreshErr) {
+        console.error('Error refreshing connections:', refreshErr);
+        // Even if refresh fails, the friend request was accepted, so don't show error
+        await fetchConnections(); // Fallback to sequential fetch
+      }
       
     } catch (err) {
       console.error('Error accepting friend request:', err);
       const errorMessage = err.response?.data?.message || 'Failed to accept friend request';
       setError(errorMessage);
+      
+      // Refresh the connection lists to ensure UI is in sync with backend
+      await fetchConnections();
     } finally {
       setActionLoading(null);
     }
@@ -286,39 +301,48 @@ const Connections = () => {
 
     return (
       <div className="space-y-2">
-        {displayList.map((user) => (
-          <Link 
-            to={`/profile/${user.id}`}
-            key={user.id}
-            className="flex items-center px-4 py-2 hover:bg-gray-50 transition-colors"
-          >
-            <Avatar 
-              src={user.profilePicture} 
-              className="w-12 h-12 border border-gray-200"
+        {displayList.map((user) => {
+          // Check if the user is a friend or has a pending request
+          const isFriend = friends.some(f => f.id === user.id);
+          const hasPendingRequest = friendRequests.some(req => 
+            req.sender.id === user.id || 
+            (req.receiver && req.receiver.id === user.id)
+          );
+          
+          return (
+            <Link 
+              to={`/profile/${user.id}`}
+              key={user.id}
+              className="flex items-center px-4 py-2 hover:bg-gray-50 transition-colors"
             >
-              {user.firstName?.[0]}{user.lastName?.[0]}
-            </Avatar>
-            <div className="ml-3 flex-grow">
-              <Typography className="font-medium text-[#002B5B]">
-                {user.username}
-              </Typography>
-              <Typography variant="body2" className="text-gray-500 text-sm">
-                {user.professionalHeader}
-              </Typography>
-            </div>
-            {user.id !== currentUser?.id && (
-              <button 
-                className={`px-4 py-1 text-sm rounded-full transition-colors ${
-                  following.some(f => f.id === user.id)
-                    ? 'border border-gray-300 bg-gray-100 text-gray-700'
-                    : 'border border-[#002B5B] text-[#002B5B] hover:bg-[#002B5B]/5'
-                }`}
+              <Avatar 
+                src={user.profilePicture} 
+                className="w-12 h-12 border border-gray-200"
               >
-                {following.some(f => f.id === user.id) ? 'Following' : 'Follow'}
-              </button>
-            )}
-          </Link>
-        ))}
+                {user.firstName?.[0]}{user.lastName?.[0]}
+              </Avatar>
+              <div className="ml-3 flex-grow">
+                <Typography className="font-medium text-[#002B5B]">
+                  {user.username}
+                </Typography>
+                <Typography variant="body2" className="text-gray-500 text-sm">
+                  {user.professionalHeader}
+                </Typography>
+              </div>
+              {user.id !== currentUser?.id && !isFriend && !hasPendingRequest && (
+                <button 
+                  className={`px-4 py-1 text-sm rounded-full transition-colors ${
+                    following.some(f => f.id === user.id)
+                      ? 'border border-gray-300 bg-gray-100 text-gray-700'
+                      : 'border border-[#002B5B] text-[#002B5B] hover:bg-[#002B5B]/5'
+                  }`}
+                >
+                  {following.some(f => f.id === user.id) ? 'Following' : 'Follow'}
+                </button>
+              )}
+            </Link>
+          );
+        })}
       </div>
     );
   };

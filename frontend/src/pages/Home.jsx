@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Paper, Avatar, Badge } from '@mui/material';
 import { Link } from 'react-router-dom';
-import Dashboard from '../components/Dashboard';
 import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
 import { motion } from 'framer-motion';
+import { ProfileSummary } from '../components/profile/components';
 
 function Home() {
   const { user } = useAuth();
@@ -38,7 +38,7 @@ function Home() {
             initials: profileData.firstName && profileData.lastName 
               ? `${profileData.firstName[0]}${profileData.lastName[0]}`.toUpperCase()
               : user.username.substring(0, 2).toUpperCase(),
-            profileImage: profileData.profileImage
+            profileImage: profileData.profilePicture
           }));
         } catch (error) {
           console.error('Error fetching user data:', error);
@@ -98,58 +98,14 @@ function Home() {
               whileHover={{ y: -5 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Paper className="p-6 rounded-2xl shadow-lg bg-white overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#002B5B] to-[#F7931E] opacity-10 -z-0"></div>
-                <div className="relative z-10">
-                  <div className="h-20 bg-gradient-to-r from-[#002B5B] to-[#F7931E] -mx-6 -mt-6 mb-12 rounded-t-lg" />
-                  <div className="absolute top-4 left-6">
-                    {userData.profileImage ? (
-                      <Avatar 
-                        src={userData.profileImage} 
-                        className="w-16 h-16 border-4 border-white shadow-md hover:shadow-lg transition-shadow"
-                      />
-                    ) : (
-                      <Avatar 
-                        className="w-16 h-16 border-4 border-white bg-[#F7931E] text-white font-bold text-xl shadow-md hover:shadow-lg transition-shadow"
-                      >
-                        {userData.initials}
-                      </Avatar>
-                    )}
-                  </div>
-                  <div className="mt-10">
-                    <Link to={`/profile/${user.id}`} className="group block">
-                      <h2 className="text-xl font-bold text-[#002B5B] group-hover:text-[#F7931E] transition-colors duration-300">
-                        {userData.name}
-                      </h2>
-                    </Link>
-                    <p className="text-sm text-[#002B5B]/80 mt-1">
-                      {userData.profession}
-                    </p>
-                    <div className="flex items-center text-sm text-[#002B5B]/60 mt-1">
-                      <span className="material-icons text-sm mr-1">location_on</span>
-                      {userData.location}
-                    </div>
-                  </div>
-                  
-                  {/* Stats */}
-                  <div className="mt-6 grid grid-cols-2 gap-4">
-                    <motion.div 
-                      whileHover={{ scale: 1.05 }}
-                      className="bg-[#F7931E]/10 p-3 rounded-lg text-center"
-                    >
-                      <p className="text-sm text-[#002B5B]/70">Views</p>
-                      <p className="text-xl font-bold text-[#F7931E]">{userData.profileViews}</p>
-                    </motion.div>
-                    <motion.div 
-                      whileHover={{ scale: 1.05 }}
-                      className="bg-[#002B5B]/10 p-3 rounded-lg text-center"
-                    >
-                      <p className="text-sm text-[#002B5B]/70">Connections</p>
-                      <p className="text-xl font-bold text-[#002B5B]">{userData.connections}</p>
-                    </motion.div>
-                  </div>
-                </div>
-              </Paper>
+              <ProfileSummary
+                name={userData.name}
+                title={userData.profession}
+                profileViews={userData.profileViews}
+                connections={userData.connections}
+                profileImage={userData.profileImage}
+                variant="full"
+              />
             </motion.div>
 
             {/* Recent Activity */}
@@ -203,7 +159,7 @@ function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <Dashboard profileData={userData} />
+              {/* Main content area - you can add new content here */}
             </motion.div>
           </div>
 

@@ -15,9 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// import java.util.ArrayList;
-// import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -202,14 +201,26 @@ public class UserServiceImpl implements UserService {
         User sender = request.getSender();
         User receiver = request.getReceiver();
         
+        // Create friendship
         Friendship friendship = new Friendship();
         friendship.setUser1(sender);
         friendship.setUser2(receiver);
         friendship.onCreate();
         
+        // Update request status
         request.setStatus(RequestStatus.ACCEPTED);
         request.onUpdate();
         
+        // Remove follow relationships in both directions
+        // First check and remove if sender follows receiver
+        Optional<Follow> senderFollowsReceiver = followRepository.findByFollowerAndFollowing(sender, receiver);
+        senderFollowsReceiver.ifPresent(followRepository::delete);
+        
+        // Then check and remove if receiver follows sender
+        Optional<Follow> receiverFollowsSender = followRepository.findByFollowerAndFollowing(receiver, sender);
+        receiverFollowsSender.ifPresent(followRepository::delete);
+        
+        // Save the friendship and updated request
         friendshipRepository.save(friendship);
         friendRequestRepository.save(request);
     }
@@ -390,4 +401,4 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
         return user.isProfileComplete();
     }
-} 
+}

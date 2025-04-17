@@ -124,8 +124,12 @@ public class UserController {
         try {
             userService.acceptFriendRequest(requestId);
             return ResponseEntity.ok(new MessageResponse("Friend request accepted."));
-        } catch (IllegalStateException e) {
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (BadRequestException e) {
             return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(new MessageResponse("Failed to accept friend request: " + e.getMessage()));
         }
     }
 
@@ -280,4 +284,4 @@ public class UserController {
     }
 
     private record ProfileStatusResponse(boolean isComplete) {}
-} 
+}

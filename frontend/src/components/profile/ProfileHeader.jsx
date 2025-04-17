@@ -2,9 +2,6 @@ import React from 'react';
 import { Button, CircularProgress } from '@mui/material';
 import { Edit as EditIcon, CameraAlt, PersonAdd, Share, GroupAdd, Close } from '@mui/icons-material';
 
-const DEFAULT_COVER = '/images/Default Cover.png';
-const DEFAULT_PROFILE = '/images/Default Profile Pic.png';
-
 export default function ProfileHeader({ 
   user, 
   isOwnProfile, 
@@ -19,22 +16,33 @@ export default function ProfileHeader({
   friendRequestLoading,
   hasPendingFriendRequest
 }) {
-  console.log('Profile Picture:', user?.profilePicture || DEFAULT_PROFILE); // Debug log
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       {/* Cover Photo */}
       <div className="relative h-48">
         <img
-          src={user?.coverPhoto || DEFAULT_COVER}
+          src={user?.coverPhoto || '/images/Default Cover.png'}
           alt="Cover photo"
           className="w-full h-full object-cover"
+          onError={(e) => {
+            console.error('Error loading cover photo:', e);
+            e.target.src = '/images/Default Cover.png';
+          }}
         />
         {isOwnProfile && (
           <Button
             startIcon={<CameraAlt />}
             variant="contained"
             onClick={onEditPhotos}
-            sx={{ position: 'absolute', right: 16, bottom: 16 }}
+            sx={{ 
+              position: 'absolute', 
+              right: 16, 
+              bottom: 16,
+              bgcolor: '#002B5B',
+              '&:hover': {
+                bgcolor: '#001B3B'
+              }
+            }}
           >
             Edit Cover
           </Button>
@@ -47,12 +55,12 @@ export default function ProfileHeader({
         <div className="absolute -top-16">
           <div className="relative h-32 w-32">
             <img
-              src={user?.profilePicture || DEFAULT_PROFILE}
+              src={user?.profilePicture || '/images/Default Profile Pic.png'}
               alt={user?.fullName || 'User'}
               className="w-full h-full rounded-full border-4 border-white shadow-lg object-cover"
               onError={(e) => {
                 console.error('Error loading profile picture:', e);
-                e.target.src = DEFAULT_PROFILE;
+                e.target.src = '/images/Default Profile Pic.png';
               }}
             />
           </div>
@@ -90,23 +98,27 @@ export default function ProfileHeader({
             </>
           ) : (
             <>
-              <Button
-                variant={isFollowing ? "outlined" : "contained"}
-                onClick={onFollow}
-                disabled={followLoading}
-                startIcon={followLoading ? <CircularProgress size={20} /> : <PersonAdd />}
-                sx={{
-                  backgroundColor: isFollowing ? 'transparent' : '#F7931E',
-                  borderColor: '#F7931E',
-                  color: isFollowing ? '#F7931E' : 'white',
-                  '&:hover': {
-                    backgroundColor: isFollowing ? 'rgba(247, 147, 30, 0.04)' : '#e07b0d',
-                    borderColor: '#e07b0d'
-                  }
-                }}
-              >
-                {isFollowing ? 'Following' : 'Follow'}
-              </Button>
+              {/* Only show Follow button if not friends and no pending request */}
+              {!isFriend && !hasPendingFriendRequest && (
+                <Button
+                  variant={isFollowing ? "outlined" : "contained"}
+                  onClick={onFollow}
+                  disabled={followLoading}
+                  startIcon={followLoading ? <CircularProgress size={20} /> : <PersonAdd />}
+                  sx={{
+                    backgroundColor: isFollowing ? 'transparent' : '#F7931E',
+                    borderColor: '#F7931E',
+                    color: isFollowing ? '#F7931E' : 'white',
+                    '&:hover': {
+                      backgroundColor: isFollowing ? 'rgba(247, 147, 30, 0.04)' : '#e07b0d',
+                      borderColor: '#e07b0d'
+                    }
+                  }}
+                >
+                  {isFollowing ? 'Following' : 'Follow'}
+                </Button>
+              )}
+              {/* Show Add Friend button if not friends */}
               {!isFriend && (
                 <Button
                   variant={hasPendingFriendRequest ? "outlined" : "contained"}
@@ -151,4 +163,4 @@ export default function ProfileHeader({
       </div>
     </div>
   );
-} 
+}

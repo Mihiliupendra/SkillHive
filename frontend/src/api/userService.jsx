@@ -1,7 +1,7 @@
 import api from './axios';
 
 export const userService = {
-  // ... existing functions ...
+  
 
   updateProfile: async (userId, profileData) => {
     try {
@@ -70,5 +70,30 @@ export const userService = {
     }
   },
 
-  // ... other functions ...
-}; 
+  getPendingFriendRequestStatus: async (userId, otherUserId) => {
+    try {
+      const [sentRequests, receivedRequests] = await Promise.all([
+        api.get(`/api/users/${userId}/friend-requests/sent`),
+        api.get(`/api/users/${userId}/friend-requests/received`)
+      ]);
+      
+      // Check both sender and receiver IDs in both sent and received requests
+      const hasSentPending = sentRequests.data.some(request => {
+        const receiverId = request.receiver?.id || request.receiverId;
+        return receiverId === otherUserId;
+      });
+      
+      const hasReceivedPending = receivedRequests.data.some(request => {
+        const senderId = request.sender?.id || request.senderId;
+        return senderId === otherUserId;
+      });
+      
+      return hasSentPending || hasReceivedPending;
+    } catch (error) {
+      console.error('Error checking friend request status:', error);
+      throw error.response?.data || error.message;
+    }
+  },
+
+  
+};
