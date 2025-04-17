@@ -208,19 +208,13 @@ export default function Navbar() {
             >
               Team
             </NavLink>
+            
             <NavLink 
-              to="/reports" 
-              icon="assessment"
-              isActive={location.pathname.startsWith('/reports')}
+              to="/post" 
+              icon="add_circle"
+              isActive={location.pathname.startsWith('/post')}
             >
-              Reports
-            </NavLink>
-            <NavLink 
-              to="/careers" 
-              icon="work"
-              isActive={location.pathname.startsWith('/careers')}
-            >
-              Careers
+              Post
             </NavLink>
             <NavLink 
               to="/notification" 
