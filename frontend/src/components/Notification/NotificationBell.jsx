@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import { FiBell } from "react-icons/fi"
 import NotificationList from "./NotificationList.jsx"
-import { getUnreadCount } from "../../services/notificationService.js"
+import { getUnreadCount } from "../../api/notificationService.js"
+import "./NotificationBell.css"
 
 function NotificationBell({ userId }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -18,6 +19,7 @@ function NotificationBell({ userId }) {
       setUnreadCount(count)
     } catch (error) {
       console.error("Error getting unread count:", error)
+      // Don't update the count on error
     } finally {
       setIsLoading(false)
     }
@@ -25,7 +27,10 @@ function NotificationBell({ userId }) {
 
   useEffect(() => {
     fetchUnreadCount()
-    const interval = setInterval(fetchUnreadCount, 30000)
+
+    // Set up polling for unread count
+    const interval = setInterval(fetchUnreadCount, 30000) // Every 30 seconds
+
     return () => clearInterval(interval)
   }, [userId])
 
@@ -48,70 +53,17 @@ function NotificationBell({ userId }) {
     setIsOpen(false)
   }
 
-  const containerStyle = {
-    position: "relative",
-  }
-
-  const buttonStyle = {
-    background: "none",
-    border: "none",
-    width: "40px",
-    height: "40px",
-    borderRadius: "50%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    position: "relative",
-  }
-
-  const bellIconStyle = {
-    fontSize: "20px",
-    color: "#65676b",
-  }
-
-  const badgeStyle = {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    backgroundColor: "#e41e3f",
-    color: "white",
-    fontSize: "11px",
-    fontWeight: 600,
-    minWidth: "18px",
-    height: "18px",
-    borderRadius: "9px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "0 4px",
-  }
-
-  const dropdownStyle = {
-    position: "absolute",
-    top: "calc(100% + 8px)",
-    right: 0,
-    zIndex: 1000,
-    animation: "fadeIn 0.2s ease", // NOTE: still needs to be defined via CSS or keyframes
-  }
-
   return (
-    <div style={containerStyle} ref={bellRef}>
-      <button
-        style={buttonStyle}
-        onClick={toggleNotifications}
-        aria-label="Notifications"
-        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)")}
-        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "none")}
-      >
-        <FiBell style={bellIconStyle} />
+    <div className="notification-bell-container" ref={bellRef}>
+      <button className="notification-bell-button" onClick={toggleNotifications} aria-label="Notifications">
+        <FiBell className="bell-icon" />
         {!isLoading && unreadCount > 0 && (
-          <span style={badgeStyle}>{unreadCount > 99 ? "99+" : unreadCount}</span>
+          <span className="notification-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
         )}
       </button>
 
       {isOpen && (
-        <div style={dropdownStyle}>
+        <div className="notification-dropdown">
           <NotificationList userId={userId} onClose={handleClose} />
         </div>
       )}

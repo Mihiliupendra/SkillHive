@@ -5,8 +5,9 @@ import {
   getNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
-} from "../../services/notificationService.js"
+} from "../../api/notificationService.js"
 import NotificationItem from "./NotificationItem.jsx"
+import "./NotificationList.css"
 
 function NotificationList({ userId, onClose }) {
   const [notifications, setNotifications] = useState([])
@@ -17,13 +18,19 @@ function NotificationList({ userId, onClose }) {
   const [filter, setFilter] = useState("all")
 
   const fetchNotifications = async (pageNum, reset = false) => {
-    if (pageNum === 0) setIsLoading(true)
+    if (pageNum === 0) {
+      setIsLoading(true)
+    }
 
     try {
       const result = await getNotifications(userId, pageNum, 10, filter)
-      reset
-        ? setNotifications(result.notifications)
-        : setNotifications((prev) => [...prev, ...result.notifications])
+
+      if (reset) {
+        setNotifications(result.notifications)
+      } else {
+        setNotifications((prev) => [...prev, ...result.notifications])
+      }
+
       setHasMore(result.hasMore)
       setError(null)
     } catch (err) {
@@ -48,7 +55,9 @@ function NotificationList({ userId, onClose }) {
     try {
       await markNotificationAsRead(notificationId)
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
+        prev.map((notification) =>
+          notification.id === notificationId ? { ...notification, read: true } : notification,
+        ),
       )
     } catch (err) {
       console.error("Error marking notification as read:", err)
@@ -58,137 +67,36 @@ function NotificationList({ userId, onClose }) {
   const handleMarkAllAsRead = async () => {
     try {
       await markAllNotificationsAsRead(userId)
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+      setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })))
     } catch (err) {
       console.error("Error marking all notifications as read:", err)
     }
   }
 
-  const unreadCount = notifications.filter((n) => !n.read).length
-
-  const styles = {
-    list: {
-      width: "100%",
-      maxWidth: "400px",
-      backgroundColor: "#fff",
-      borderRadius: "8px",
-      boxShadow: "0 2px 12px rgba(0, 0, 0, 0.15)",
-      maxHeight: "500px",
-      display: "flex",
-      flexDirection: "column",
-    },
-    header: {
-      padding: "16px",
-      borderBottom: "1px solid #eaeaea",
-      position: "sticky",
-      top: 0,
-      backgroundColor: "white",
-      zIndex: 1,
-      borderTopLeftRadius: "8px",
-      borderTopRightRadius: "8px",
-    },
-    headerTitle: {
-      margin: "0 0 8px 0",
-      fontSize: "18px",
-    },
-    actions: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    filters: {
-      display: "flex",
-      gap: "8px",
-    },
-    filterButton: (active) => ({
-      background: "none",
-      border: "none",
-      padding: "4px 8px",
-      fontSize: "14px",
-      cursor: "pointer",
-      borderRadius: "4px",
-      color: active ? "#1877f2" : "#65676b",
-      fontWeight: active ? 600 : 400,
-      backgroundColor: active ? "rgba(24, 119, 242, 0.1)" : "transparent",
-    }),
-    markAllReadButton: {
-      background: "none",
-      border: "none",
-      color: "#1877f2",
-      fontSize: "14px",
-      cursor: "pointer",
-    },
-    items: {
-      overflowY: "auto",
-      flexGrow: 1,
-    },
-    loading: {
-      padding: "24px",
-      textAlign: "center",
-      color: "#65676b",
-    },
-    error: {
-      padding: "16px",
-      textAlign: "center",
-      color: "#e41e3f",
-      backgroundColor: "rgba(228, 30, 63, 0.1)",
-      margin: "8px",
-      borderRadius: "8px",
-    },
-    empty: {
-      padding: "32px 16px",
-      textAlign: "center",
-      color: "#65676b",
-      fontStyle: "italic",
-    },
-    loadMoreButton: {
-      margin: "16px auto",
-      padding: "8px 16px",
-      backgroundColor: "#f0f2f5",
-      border: "none",
-      borderRadius: "6px",
-      fontSize: "14px",
-      cursor: "pointer",
-      color: "#65676b",
-      display: "block",
-      width: "80%",
-    },
-    loadMoreButtonHover: {
-      backgroundColor: "#e4e6eb",
-    },
-    loadMoreDisabled: {
-      opacity: 0.6,
-      cursor: "not-allowed",
-    },
-    closeButton: {
-      padding: "12px",
-      backgroundColor: "#f0f2f5",
-      border: "none",
-      borderTop: "1px solid #eaeaea",
-      fontSize: "14px",
-      fontWeight: 500,
-      cursor: "pointer",
-      color: "#65676b",
-      borderBottomLeftRadius: "8px",
-      borderBottomRightRadius: "8px",
-    },
-  }
+  const unreadCount = notifications.filter((notification) => !notification.read).length
 
   return (
-    <div style={styles.list}>
-      <div style={styles.header}>
-        <h3 style={styles.headerTitle}>Notifications</h3>
-        <div style={styles.actions}>
-          <div style={styles.filters}>
-            <button style={styles.filterButton(filter === "all")} onClick={() => setFilter("all")}>
+    <div className="notification-list">
+      <div className="notification-header">
+        <h3>Notifications</h3>
+        <div className="notification-actions">
+          <div className="notification-filters">
+            <button
+              className={`filter-button ${filter === "all" ? "active" : ""}`}
+              onClick={() => setFilter("all")}
+            >
               All
             </button>
-            <button style={styles.filterButton(filter === "unread")} onClick={() => setFilter("unread")}>
+            <button
+              className={`filter-button ${filter === "unread" ? "active" : ""}`}
+              onClick={() => setFilter("unread")}
+            >
               Unread
             </button>
           </div>
+
           {unreadCount > 0 && (
-            <button style={styles.markAllReadButton} onClick={handleMarkAllAsRead}>
+            <button className="mark-all-read-button" onClick={handleMarkAllAsRead}>
               Mark all as read
             </button>
           )}
@@ -196,34 +104,36 @@ function NotificationList({ userId, onClose }) {
       </div>
 
       {isLoading && page === 0 ? (
-        <div style={styles.loading}>Loading notifications...</div>
+        <div className="notification-loading">Loading notifications...</div>
       ) : error ? (
-        <div style={styles.error}>{error}</div>
+        <div className="notification-error">{error}</div>
       ) : notifications.length === 0 ? (
-        <div style={styles.empty}>No notifications to display.</div>
+        <div className="no-notifications">No notifications to display.</div>
       ) : (
         <>
-          <div style={styles.items}>
+          <div className="notification-items">
             {notifications.map((notification) => (
-              <NotificationItem key={notification.id} notification={notification} onMarkAsRead={handleMarkAsRead} />
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onMarkAsRead={handleMarkAsRead}
+              />
             ))}
           </div>
+
           {hasMore && (
-            <button
-              style={{
-                ...styles.loadMoreButton,
-                ...(isLoading ? styles.loadMoreDisabled : {}),
-              }}
-              onClick={handleLoadMore}
-              disabled={isLoading}
-            >
+            <button className="load-more-button" onClick={handleLoadMore} disabled={isLoading}>
               {isLoading ? "Loading..." : "Load More"}
             </button>
           )}
         </>
       )}
 
-      {onClose && <button style={styles.closeButton} onClick={onClose}>Close</button>}
+      {onClose && (
+        <button className="close-notifications-button" onClick={onClose}>
+          Close
+        </button>
+      )}
     </div>
   )
 }

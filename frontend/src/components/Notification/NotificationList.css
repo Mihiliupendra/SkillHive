@@ -1,0 +1,128 @@
+.notification-list {
+    width: 100%;
+    max-width: 400px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    max-height: 500px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .notification-header {
+    padding: 16px;
+    border-bottom: 1px solid #eaeaea;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 1;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  .notification-header h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+  }
+  
+  .notification-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .notification-filters {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .filter-button {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #65676b;
+  }
+  
+  .filter-button.active {
+    font-weight: 600;
+    color: #1877f2;
+    background-color: rgba(24, 119, 242, 0.1);
+  }
+  
+  .mark-all-read-button {
+    background: none;
+    border: none;
+    color: #1877f2;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .notification-items {
+    overflow-y: auto;
+    flex-grow: 1;
+  }
+  
+  .notification-loading {
+    padding: 24px;
+    text-align: center;
+    color: #65676b;
+  }
+  
+  .notification-error {
+    padding: 16px;
+    text-align: center;
+    color: #e41e3f;
+    background-color: rgba(228, 30, 63, 0.1);
+    margin: 8px;
+    border-radius: 8px;
+  }
+  
+  .no-notifications {
+    padding: 32px 16px;
+    text-align: center;
+    color: #65676b;
+    font-style: italic;
+  }
+  
+  .load-more-button {
+    margin: 16px auto;
+    padding: 8px 16px;
+    background-color: #f0f2f5;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #65676b;
+    display: block;
+    width: 80%;
+  }
+  
+  .load-more-button:hover {
+    background-color: #e4e6eb;
+  }
+  
+  .load-more-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .close-notifications-button {
+    padding: 12px;
+    background-color: #f0f2f5;
+    border: none;
+    border-top: 1px solid #eaeaea;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #65676b;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+  
+  .close-notifications-button:hover {
+    background-color: #e4e6eb;
+  }
+  
