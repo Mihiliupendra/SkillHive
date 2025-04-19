@@ -13,6 +13,7 @@ public interface UserService {
     User updateProfile(String userId, User updatedUser);
     User completeProfile(String userId, ProfileCompletionDto profileData);
     User getUserProfile(String userId);
+    User findById(String id);
     boolean isProfileComplete(String userId);
     void followUser(String userId, String userToFollowId);
     void unfollowUser(String userId, String userToUnfollowId);
