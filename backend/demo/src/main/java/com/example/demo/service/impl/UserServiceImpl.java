@@ -77,9 +77,9 @@ public class UserServiceImpl implements UserService {
         if (updatedUser.getCity() != null) {
             existingUser.setCity(updatedUser.getCity());
         }
-        if (updatedUser.getSkills() != null) {
-            existingUser.setSkills(updatedUser.getSkills());
-        }
+        // if (updatedUser.getSkills() != null) {
+        //     existingUser.setSkills(updatedUser.getSkills());
+        // }
         if (updatedUser.getProfilePicture() != null) {
             existingUser.setProfilePicture(updatedUser.getProfilePicture());
         }
@@ -387,7 +387,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
         user.setProfessionalHeader(profileData.getProfessionalHeader());
-        user.setSkills(profileData.getSkills());
+        // user.setSkills(profileData.getSkills());
         user.setCountry(profileData.getCountry());
         user.setCity(profileData.getCity());
         user.setProfileComplete(true);
@@ -400,5 +400,11 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
         return user.isProfileComplete();
+    }
+
+    @Override
+    public User findById(String id) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findById'");
     }
 }
