@@ -17,6 +17,9 @@ import Settings from './pages/Settings';
 // import Communities from './pages/Communities';
 // import CommunityFeed from './pages/CommunityFeed';
 import Connections from './pages/Connections';
+
+
+
 import NotificationsPage from "./pages/Notifications";
 
 function App() {
