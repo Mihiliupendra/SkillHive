@@ -97,3 +97,5 @@ export const useAuth = () => {
   }
   return context;
 }; 
+
+console.log('AuthContext instance ID:', Math.random()); // Should log ONCE
