@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "../config"
-
+import api from './axios';
 // Add a mock mode flag for demonstration purposes
 const USE_MOCK_MODE = true // Set to false when real backend is available
 

@@ -11,8 +11,6 @@ import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 // In your router file (e.g., App.js or routes.js)
 import Connections from './pages/Connections';
-import NotificationBell from "./components/Notification/NotificationBell.jsx"
-import { useNotifications } from "./hooks/useNotifications.js"
 import NotificationsPage from "./pages/Notifications"
 
 

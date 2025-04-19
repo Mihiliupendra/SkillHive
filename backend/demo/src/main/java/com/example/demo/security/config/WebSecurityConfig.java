@@ -59,6 +59,8 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/users/signup").permitAll()
                     .requestMatchers("/images/**").permitAll()
+                    .requestMatchers("/api/notifications/**").permitAll()
+                    .requestMatchers("/api/posts/{postId}/likes").permitAll()
                     .anyRequest().authenticated()
             );
 
