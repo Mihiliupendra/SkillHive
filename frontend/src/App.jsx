@@ -20,7 +20,8 @@ import Connections from './pages/Connections';
 
 
 
-import NotificationsPage from "./pages/Notifications";
+import NotificationList from './components/Notification/NotificationList';
+
 
 function App() {
   return (
@@ -84,10 +85,10 @@ function App() {
             }
           />
           <Route
-            path="/messages"
+            path="/notification"
             element={
               <ProtectedRoute>
-                <NotificationsPage />
+                 <NotificationList />
               </ProtectedRoute>
             }
           />
