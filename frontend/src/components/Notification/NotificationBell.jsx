@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { FiBell } from "react-icons/fi"
 import NotificationList from "./NotificationList.jsx"
-import { getUnreadCount } from "../../api/notificationService.js"
+import notificationService from "../../api/notificationService.js"
 import "./NotificationBell.css"
 
 function NotificationBell({ userId }) {

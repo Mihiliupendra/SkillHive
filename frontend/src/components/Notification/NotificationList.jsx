@@ -1,11 +1,7 @@
 "use client"
 
+import notificationService from "../../api/notificationService.js"
 import { useState, useEffect } from "react"
-import {
-  getNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-} from "../../api/notificationService.js"
 import NotificationItem from "./NotificationItem.jsx"
 import "./NotificationList.css"
 
@@ -23,7 +19,8 @@ function NotificationList({ userId, onClose }) {
     }
 
     try {
-      const result = await getNotifications(userId, pageNum, 10, filter)
+      // Corrected: Using notificationService instead of getNotifications
+      const result = await notificationService.getNotifications(userId, pageNum, 10, filter)
 
       if (reset) {
         setNotifications(result.notifications)
@@ -53,7 +50,8 @@ function NotificationList({ userId, onClose }) {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await markNotificationAsRead(notificationId)
+      // Corrected: Using notificationService instead of markNotificationAsRead
+      await notificationService.markNotificationAsRead(notificationId)
       setNotifications((prev) =>
         prev.map((notification) =>
           notification.id === notificationId ? { ...notification, read: true } : notification,
@@ -66,7 +64,8 @@ function NotificationList({ userId, onClose }) {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await markAllNotificationsAsRead(userId)
+      // Corrected: Using notificationService instead of markAllNotificationsAsRead
+      await notificationService.markAllNotificationsAsRead(userId)
       setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })))
     } catch (err) {
       console.error("Error marking all notifications as read:", err)
