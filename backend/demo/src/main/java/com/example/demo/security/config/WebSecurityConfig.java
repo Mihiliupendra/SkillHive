@@ -61,6 +61,7 @@ public class WebSecurityConfig {
                     .requestMatchers("/images/**").permitAll()
                     .requestMatchers("/api/notifications/**").permitAll()
                     .requestMatchers("/api/posts/{postId}/likes").permitAll()
+                    .requestMatchers("/api/communities/**").permitAll()
                     .anyRequest().authenticated()
             );
 
