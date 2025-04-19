@@ -1,17 +1,23 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme/theme';
+import { AuthProvider } from './context/AuthContext';
+
+import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './components/profile/Profile';
+import NotificationBell from "./components/Notification/NotificationBell.jsx"
+import { useNotifications } from "./hooks/useNotifications.js"
+
 import Home from './pages/Home';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Settings from './pages/Settings';
-import ProtectedRoute from './components/ProtectedRoute';
-// In your router file (e.g., App.js or routes.js)
+import Communities from './pages/Communities';
+import CommunityFeed from './pages/CommunityFeed';
 import Connections from './pages/Connections';
-
+import NotificationsPage from "./pages/Notifications";
 
 function App() {
   return (
@@ -53,13 +59,10 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* 🔁 Redirecting /team to /communities */}
           <Route
             path="/team"
-            element={
-              <ProtectedRoute>
-                <div>Team Page</div>
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/communities" replace />}
           />
           <Route
             path="/reports"
@@ -81,7 +84,7 @@ function App() {
             path="/messages"
             element={
               <ProtectedRoute>
-                <div>Messages Page</div>
+                <NotificationsPage />
               </ProtectedRoute>
             }
           />
@@ -101,13 +104,30 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route 
-            path="/my-network" 
+          <Route
+            path="/my-network"
             element={
               <ProtectedRoute>
                 <Connections />
               </ProtectedRoute>
-            } 
+            }
+          />
+          {/* 🚀 Communities */}
+          <Route
+            path="/communities"
+            element={
+              <ProtectedRoute>
+                <Communities />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/community/:communityId"
+            element={
+              <ProtectedRoute>
+                <CommunityFeed />
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </div>
@@ -115,4 +135,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
