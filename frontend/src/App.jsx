@@ -14,8 +14,8 @@ import Home from './pages/Home';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Settings from './pages/Settings';
-// import Communities from './pages/Communities';
-// import CommunityFeed from './pages/CommunityFeed';
+import Communities from './pages/Communities';
+import CommunityFeed from './pages/CommunityFeed';
 import Connections from './pages/Connections';
 
 
@@ -116,23 +116,23 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* 🚀 Communities */}
-          {/* <Route
+          {/*🚀 Communities */}
+          <Route
             path="/communities"
             element={
               <ProtectedRoute>
                 <Communities />
               </ProtectedRoute>
             }
-          /> */}
-          {/* <Route
+          />
+          <Route
             path="/community/:communityId"
             element={
               <ProtectedRoute>
                 <CommunityFeed />
               </ProtectedRoute>
             }
-          /> */}
+          />
         </Routes>
       </div>
     </ThemeProvider>
