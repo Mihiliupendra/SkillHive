@@ -8,11 +8,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
 @Repository
 public interface NotificationRepository extends MongoRepository<Notification, String> {
     Page<Notification> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
-    Page<Notification> findByUserIdAndReadFalseOrderByCreatedAtDesc(String userId, Pageable pageable);
-    long countByUserIdAndReadFalse(String userId);
-    void deleteByUserId(String userId);
+    List<Notification> findByUserIdAndReadOrderByCreatedAtDesc(String userId, boolean read);
+    long countByUserIdAndRead(String userId, boolean read);
 }
-

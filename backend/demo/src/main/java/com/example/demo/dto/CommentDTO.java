@@ -1,40 +1,42 @@
-package com.example.demo.model;
+package com.example.demo.dto;
 
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.index.Indexed;
 
-import java.time.Instant;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "comments")
-public class Comment {
-    @Id
+public class CommentDTO {
     private String id;
+
+    @NotBlank(message = "Comment content cannot be empty")
     private String content;
+
+    @NotBlank(message = "Post ID cannot be empty")
     private String postId;
+
     private String userId;
     private String userDisplayName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String parentCommentId;
-    private List<String> replies = new ArrayList<>();
+    private List<CommentDTO> replies;
     private boolean deleted;
 }
-
-
