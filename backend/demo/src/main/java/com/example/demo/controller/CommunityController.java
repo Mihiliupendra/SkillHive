@@ -6,15 +6,14 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import java.util.Map;
+import java.util.Optional;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/v1/communities")
@@ -58,43 +57,30 @@ public class CommunityController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Community>> getCommunity(@PathVariable String id) {
+    public ResponseEntity<Community> getCommunity(@PathVariable String id) {
         return communityService.getCommunityById(id)
-                .map(community -> {
-                    EntityModel<Community> model = EntityModel.of(community);
-                    model.add(linkTo(methodOn(CommunityController.class).getCommunity(id)).withSelfRel());
-                    model.add(linkTo(methodOn(CommunityController.class).getCommunities(0,10,null,null,null,null,null,null)).withRel("all-communities"));
-                    model.add(linkTo(methodOn(CommunityController.class).getCommunityMembers(id)).withRel("members"));
-                    model.add(linkTo(methodOn(CommunityController.class).getCommunityAdmins(id)).withRel("admins"));
-                    return ResponseEntity.ok(model);
-                })
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<EntityModel<Community>> createCommunity(@Valid @RequestBody Community community) {
+    public ResponseEntity<Community> createCommunity(@Valid @RequestBody Community community) {
         if (community.getId() != null) {
             return ResponseEntity.badRequest().build();
         }
         Community created = communityService.createCommunity(community);
-        EntityModel<Community> model = EntityModel.of(created);
-        model.add(linkTo(methodOn(CommunityController.class).getCommunity(created.getId())).withSelfRel());
-        return ResponseEntity.status(HttpStatus.CREATED).body(model);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EntityModel<Community>> updateCommunity(
+    public ResponseEntity<Community> updateCommunity(
             @PathVariable String id,
             @Valid @RequestBody Community community) {
         if (!id.equals(community.getId())) {
             return ResponseEntity.badRequest().build();
         }
         return communityService.updateCommunity(community)
-                .map(updated -> {
-                    EntityModel<Community> model = EntityModel.of(updated);
-                    model.add(linkTo(methodOn(CommunityController.class).getCommunity(id)).withSelfRel());
-                    return ResponseEntity.ok(model);
-                })
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
