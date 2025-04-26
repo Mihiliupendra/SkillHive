@@ -7,8 +7,8 @@ import { AuthProvider } from './context/AuthContext';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './components/profile/Profile';
-import NotificationBell from "./components/Notification/NotificationBell.jsx"
-import { useNotifications } from "./hooks/useNotifications.js"
+
+
 
 import Home from './pages/Home';
 import SignIn from './pages/SignIn';
@@ -18,9 +18,12 @@ import Communities from './pages/Communities';
 import CommunityFeed from './pages/CommunityFeed';
 import Connections from './pages/Connections';
 
+import { NotificationProvider } from './context/NotificationContext';
+import NotificationIcon from './components/notifications/NotificationIcon';
+import NotificationsPage from './pages/NotificationsPage';
+import websocketService from './services/websocketService';
 
 
-import NotificationList from './components/Notification/NotificationList';
 
 
 function App() {
@@ -88,7 +91,7 @@ function App() {
             path="/notification"
             element={
               <ProtectedRoute>
-                 <NotificationList />
+                  <NotificationsPage />
               </ProtectedRoute>
             }
           />
