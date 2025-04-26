@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
 import { motion } from 'framer-motion';
 import { ProfileSummary } from '../components/profile/components';
+import PostFeed from '../components/PostFeed';
 
 function Home() {
   const { user } = useAuth();
@@ -138,6 +139,7 @@ function Home() {
               transition={{ delay: 0.1 }}
             >
               {/* Main content area - you can add new content here */}
+              <PostFeed/>
             </motion.div>
           </div>
 
