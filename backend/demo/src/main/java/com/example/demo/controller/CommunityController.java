@@ -2,15 +2,22 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Community;
 import com.example.demo.service.CommunityService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 @RestController
-@RequestMapping("/api/communities")
+@RequestMapping("/api/v1/communities")
 public class CommunityController {
 
     private final CommunityService communityService;
@@ -21,68 +28,74 @@ public class CommunityController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Community>> getAllCommunities() {
-        return ResponseEntity.ok(communityService.getAllCommunities());
-    }
+    public ResponseEntity<Page<Community>> getCommunities(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String tag,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String visibility, // 👈 added for "public" filter
+            @RequestParam(required = false) String memberId,
+            @RequestParam(required = false) String adminId
+    ) {
+        PageRequest pageable = PageRequest.of(page, size);
 
-    @GetMapping("/public")
-    public ResponseEntity<List<Community>> getPublicCommunities() {
-        return ResponseEntity.ok(communityService.getPublicCommunities());
+        if (visibility != null && visibility.equalsIgnoreCase("public")) {
+            return ResponseEntity.ok(communityService.getPublicCommunities(pageable));
+        } else if (category != null) {
+            return ResponseEntity.ok(communityService.getCommunitiesByCategory(category, pageable));
+        } else if (tag != null) {
+            return ResponseEntity.ok(communityService.getCommunitiesByTag(tag, pageable));
+        } else if (name != null) {
+            return ResponseEntity.ok(communityService.getCommunitiesByNameContaining(name, pageable));
+        } else if (memberId != null) {
+            return ResponseEntity.ok(communityService.getCommunitiesByMember(memberId, pageable));
+        } else if (adminId != null) {
+            return ResponseEntity.ok(communityService.getCommunitiesByAdmin(adminId, pageable));
+        } else {
+            return ResponseEntity.ok(communityService.getAllCommunities(pageable));
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Community> getCommunityById(@PathVariable String id) {
+    public ResponseEntity<EntityModel<Community>> getCommunity(@PathVariable String id) {
         return communityService.getCommunityById(id)
-                .map(ResponseEntity::ok)
+                .map(community -> {
+                    EntityModel<Community> model = EntityModel.of(community);
+                    model.add(linkTo(methodOn(CommunityController.class).getCommunity(id)).withSelfRel());
+                    model.add(linkTo(methodOn(CommunityController.class).getCommunities(0,10,null,null,null,null,null,null)).withRel("all-communities"));
+                    model.add(linkTo(methodOn(CommunityController.class).getCommunityMembers(id)).withRel("members"));
+                    model.add(linkTo(methodOn(CommunityController.class).getCommunityAdmins(id)).withRel("admins"));
+                    return ResponseEntity.ok(model);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/by-name/{name}")
-    public ResponseEntity<Community> getCommunityByName(@PathVariable String name) {
-        return communityService.getCommunityByName(name)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/category/{category}")
-    public ResponseEntity<List<Community>> getCommunitiesByCategory(@PathVariable String category) {
-        return ResponseEntity.ok(communityService.getCommunitiesByCategory(category));
-    }
-
-    @GetMapping("/tag/{tag}")
-    public ResponseEntity<List<Community>> getCommunitiesByTag(@PathVariable String tag) {
-        return ResponseEntity.ok(communityService.getCommunitiesByTag(tag));
-    }
-
-    @GetMapping("/member/{userId}")
-    public ResponseEntity<List<Community>> getCommunitiesByMember(@PathVariable String userId) {
-        return ResponseEntity.ok(communityService.getCommunitiesByMember(userId));
-    }
-
-    @GetMapping("/admin/{userId}")
-    public ResponseEntity<List<Community>> getCommunitiesByAdmin(@PathVariable String userId) {
-        return ResponseEntity.ok(communityService.getCommunitiesByAdmin(userId));
-    }
-
-    @PostMapping("/create")
-    public ResponseEntity<Community> createCommunity(@RequestBody Community community) {
+    @PostMapping
+    public ResponseEntity<EntityModel<Community>> createCommunity(@Valid @RequestBody Community community) {
         if (community.getId() != null) {
             return ResponseEntity.badRequest().build();
         }
-        return new ResponseEntity<>(communityService.createCommunity(community), HttpStatus.CREATED);
+        Community created = communityService.createCommunity(community);
+        EntityModel<Community> model = EntityModel.of(created);
+        model.add(linkTo(methodOn(CommunityController.class).getCommunity(created.getId())).withSelfRel());
+        return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
 
-
     @PutMapping("/{id}")
-    public ResponseEntity<Community> updateCommunity(@PathVariable String id, @RequestBody Community community) {
+    public ResponseEntity<EntityModel<Community>> updateCommunity(
+            @PathVariable String id,
+            @Valid @RequestBody Community community) {
         if (!id.equals(community.getId())) {
             return ResponseEntity.badRequest().build();
         }
-        try {
-            return ResponseEntity.ok(communityService.updateCommunity(community));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return communityService.updateCommunity(community)
+                .map(updated -> {
+                    EntityModel<Community> model = EntityModel.of(updated);
+                    model.add(linkTo(methodOn(CommunityController.class).getCommunity(id)).withSelfRel());
+                    return ResponseEntity.ok(model);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
@@ -91,27 +104,41 @@ public class CommunityController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{communityId}/members")
+    public ResponseEntity<List<String>> getCommunityMembers(@PathVariable String communityId) {
+        return ResponseEntity.ok(communityService.getCommunityMembers(communityId));
+    }
+
     @PostMapping("/{communityId}/members/{userId}")
     public ResponseEntity<Void> addMember(@PathVariable String communityId, @PathVariable String userId) {
-        boolean added = communityService.addMember(communityId, userId);
-        return added ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+        return communityService.addMember(communityId, userId)
+                ? ResponseEntity.status(HttpStatus.CREATED).build()
+                : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{communityId}/members/{userId}")
     public ResponseEntity<Void> removeMember(@PathVariable String communityId, @PathVariable String userId) {
-        boolean removed = communityService.removeMember(communityId, userId);
-        return removed ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+        return communityService.removeMember(communityId, userId)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{communityId}/admins")
+    public ResponseEntity<List<String>> getCommunityAdmins(@PathVariable String communityId) {
+        return ResponseEntity.ok(communityService.getCommunityAdmins(communityId));
     }
 
     @PostMapping("/{communityId}/admins/{userId}")
     public ResponseEntity<Void> addAdmin(@PathVariable String communityId, @PathVariable String userId) {
-        boolean added = communityService.addAdmin(communityId, userId);
-        return added ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+        return communityService.addAdmin(communityId, userId)
+                ? ResponseEntity.status(HttpStatus.CREATED).build()
+                : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{communityId}/admins/{userId}")
     public ResponseEntity<Void> removeAdmin(@PathVariable String communityId, @PathVariable String userId) {
-        boolean removed = communityService.removeAdmin(communityId, userId);
-        return removed ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+        return communityService.removeAdmin(communityId, userId)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 }
