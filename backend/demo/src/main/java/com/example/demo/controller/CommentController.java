@@ -2,9 +2,7 @@ package com.example.demo.controller;
 
 
 
-import com.example.demo.dto.CommentRequest;
-import com.example.demo.dto.CommentUpdateRequest;
-import com.example.demo.dto.CountResponse;
+import com.example.demo.dto.CommentDTO;
 import com.example.demo.model.Comment;
 import com.example.demo.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,50 +12,71 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import com.example.demo.dto.CommentDTO;
+import com.example.demo.service.CommentService;
+//import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/comments")
+@RequiredArgsConstructor
 public class CommentController {
+
     private final CommentService commentService;
 
-    @Autowired
-    public CommentController(CommentService commentService) {
-        this.commentService = commentService;
+    @PostMapping
+    public ResponseEntity<CommentDTO> createComment(
+            @Valid @RequestBody CommentDTO commentDTO,
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Name") String userName) {
+        CommentDTO createdComment = commentService.createComment(commentDTO, userId, userName);
+        return new ResponseEntity<>(createdComment, HttpStatus.CREATED);
     }
 
-    @GetMapping("/api/posts/{postId}/comments")
-    public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable String postId) {
-        List<Comment> comments = commentService.getCommentsByPostId(postId);
-        return ResponseEntity.ok(comments);
+    @PostMapping("/{parentCommentId}/replies")
+    public ResponseEntity<CommentDTO> replyToComment(
+            @PathVariable String parentCommentId,
+            @Valid @RequestBody CommentDTO replyDTO,
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Name") String userName) {
+        CommentDTO createdReply = commentService.replyToComment(parentCommentId, replyDTO, userId, userName);
+        return new ResponseEntity<>(createdReply, HttpStatus.CREATED);
     }
 
-    @GetMapping("/api/posts/{postId}/comments/count")
-    public ResponseEntity<CountResponse> getCommentCount(@PathVariable String postId) {
-        long count = commentService.getCommentCount(postId);
-        return ResponseEntity.ok(new CountResponse(count));
-    }
-
-    @PostMapping("/api/comments")
-    public ResponseEntity<Comment> createComment(@Valid @RequestBody CommentRequest request) {
-        Comment comment = commentService.createComment(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(comment);
-    }
-
-    @PutMapping("/api/comments/{commentId}")
-    public ResponseEntity<Comment> updateComment(
+    @PutMapping("/{commentId}")
+    public ResponseEntity<CommentDTO> updateComment(
             @PathVariable String commentId,
-            @Valid @RequestBody CommentUpdateRequest request,
-            @RequestHeader("User-Id") String userId) {
-        Comment comment = commentService.updateComment(commentId, request, userId);
-        return ResponseEntity.ok(comment);
+            @Valid @RequestBody CommentDTO commentDTO,
+            @RequestHeader("X-User-Id") String userId) {
+        CommentDTO updatedComment = commentService.updateComment(commentId, commentDTO, userId);
+        return ResponseEntity.ok(updatedComment);
     }
 
-    @DeleteMapping("/api/comments/{commentId}")
+    @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @PathVariable String commentId,
-            @RequestHeader("User-Id") String userId) {
+            @RequestHeader("X-User-Id") String userId) {
         commentService.deleteComment(commentId, userId);
         return ResponseEntity.noContent().build();
     }
-}
 
+    @GetMapping("/post/{postId}")
+    public ResponseEntity<Page<CommentDTO>> getPostComments(
+            @PathVariable String postId,
+            @PageableDefault(size = 10) Pageable pageable) {
+        Page<CommentDTO> comments = commentService.getPostComments(postId, pageable);
+        return ResponseEntity.ok(comments);
+    }
+
+    @GetMapping("/post/{postId}/count")
+    public ResponseEntity<Long> getCommentCount(@PathVariable String postId) {
+        long count = commentService.getCommentCount(postId);
+        return ResponseEntity.ok(count);
+    }
+}
