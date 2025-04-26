@@ -23,7 +23,7 @@ const Navbar = () => {
     { to: '/home', icon: 'home', label: 'Home', match: path => path === '/home' },
     { to: '/projects', icon: 'folder', label: 'Projects', match: path => path.startsWith('/projects') },
     { to: '/team', icon: 'groups', label: 'Team', match: path => path.startsWith('/team') },
-    { to: '/post', icon: 'add_circle', label: 'Post', match: path => path.startsWith('/post') },
+    { to: '/post', icon: 'add_circle', label: 'Post', match: path => path.startsWith('/homes') },
     { to: '/notification', icon: 'notifications', label: 'Notification', match: path => path.startsWith('/notification') }
   ], []);
 
@@ -64,7 +64,7 @@ const Navbar = () => {
         setIsSearchFocused(false);
       }
       if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
-          buttonRef.current && !buttonRef.current.contains(event.target)) {
+        buttonRef.current && !buttonRef.current.contains(event.target)) {
         setIsProfileOpen(false);
       }
     };
@@ -99,8 +99,8 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Left section - Logo and Search */}
           <div className="flex items-center flex-1">
-            <Link 
-              to="/home" 
+            <Link
+              to="/home"
               className="flex-shrink-0 flex items-center space-x-2 group"
               aria-label="Home"
             >
@@ -110,15 +110,15 @@ const Navbar = () => {
               >
                 <i className="material-icons">hive</i>
               </motion.div>
-              <motion.span 
+              <motion.span
                 className="text-[#F7931E] text-xl font-bold tracking-wide"
                 whileHover={{ scale: 1.05 }}
               >
                 SKILL HIVE
               </motion.span>
             </Link>
-            
-            <motion.div 
+
+            <motion.div
               ref={searchRef}
               className="ml-4 sm:ml-8 flex-1 max-w-xl relative"
               animate={{ width: isSearchFocused ? '100%' : 'auto' }}
@@ -136,7 +136,7 @@ const Navbar = () => {
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#002B5B]/60">
                   {isSearching ? (
-                    <motion.i 
+                    <motion.i
                       className="material-icons"
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -202,7 +202,7 @@ const Navbar = () => {
           {/* Center section - Navigation */}
           <div className="hidden lg:flex items-center justify-center space-x-8 mx-4">
             {navItems.map((item) => (
-              <NavLink 
+              <NavLink
                 key={item.to}
                 to={item.to}
                 icon={item.icon}
@@ -216,7 +216,7 @@ const Navbar = () => {
           {/* Right section - Profile */}
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <motion.button 
+              <motion.button
                 ref={buttonRef}
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center space-x-2 text-white hover:bg-white/10 rounded-full p-1 pr-2 transition-colors"
@@ -225,7 +225,7 @@ const Navbar = () => {
                 aria-label="Profile menu"
                 aria-expanded={isProfileOpen}
               >
-                <motion.div 
+                <motion.div
                   className="w-9 h-9 rounded-full bg-gradient-to-r from-[#F7931E] to-[#002B5B] flex items-center justify-center text-white font-bold shadow-sm"
                   whileHover={{ rotate: 5 }}
                 >
@@ -234,7 +234,7 @@ const Navbar = () => {
                 <span className="text-sm font-medium hidden md:inline-block">
                   {user.username}
                 </span>
-                <motion.i 
+                <motion.i
                   className="material-icons text-sm"
                   animate={{ rotate: isProfileOpen ? 180 : 0 }}
                   aria-hidden="true"
@@ -246,7 +246,7 @@ const Navbar = () => {
               {/* Profile Dropdown */}
               <AnimatePresence>
                 {isProfileOpen && (
-                  <motion.div 
+                  <motion.div
                     ref={dropdownRef}
                     className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-1 z-50 overflow-hidden"
                     initial={{ opacity: 0, y: -10 }}
@@ -259,9 +259,9 @@ const Navbar = () => {
                       <p className="text-sm font-medium text-[#002B5B]">{user.username}</p>
                       <p className="text-xs text-[#002B5B]/70 truncate">{user.email}</p>
                     </div>
-                    
-                    <Link 
-                      to={`/profile/${user.id}`} 
+
+                    <Link
+                      to={`/profile/${user.id}`}
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center px-4 py-2.5 text-sm text-[#002B5B] hover:bg-[#F7931E]/10 transition-colors"
                       role="menuitem"
@@ -269,8 +269,8 @@ const Navbar = () => {
                       <i className="material-icons text-[#F7931E] mr-3" aria-hidden="true">person</i>
                       <span>View Profile</span>
                     </Link>
-                    <Link 
-                      to="/settings" 
+                    <Link
+                      to="/settings"
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center px-4 py-2.5 text-sm text-[#002B5B] hover:bg-[#F7931E]/10 transition-colors"
                       role="menuitem"
@@ -278,7 +278,7 @@ const Navbar = () => {
                       <i className="material-icons text-[#F7931E] mr-3" aria-hidden="true">settings</i>
                       <span>Settings</span>
                     </Link>
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="w-full flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       role="menuitem"
@@ -299,7 +299,7 @@ const Navbar = () => {
 
 const NavLink = React.memo(({ to, icon, children, isActive }) => {
   return (
-    <Link 
+    <Link
       to={to}
       className={`flex flex-col items-center transition-all duration-200 ${isActive ? 'text-[#F7931E]' : 'text-white/80 hover:text-[#F7931E]'}`}
       aria-current={isActive ? 'page' : undefined}
@@ -310,7 +310,7 @@ const NavLink = React.memo(({ to, icon, children, isActive }) => {
       >
         <i className="material-icons" aria-hidden="true">{icon}</i>
         {isActive && (
-          <motion.span 
+          <motion.span
             className="absolute -bottom-1 left-1/2 w-1 h-1 bg-[#F7931E] rounded-full"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}

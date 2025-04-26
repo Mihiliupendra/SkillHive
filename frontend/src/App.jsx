@@ -18,10 +18,14 @@ import Communities from './pages/Communities';
 import CommunityFeed from './pages/CommunityFeed';
 import Connections from './pages/Connections';
 
-
-
 import NotificationList from './components/Notification/NotificationList';
 
+// Samadhi's Post Routes
+import Homes from './pages/Homes';
+import CreatePost from './pages/CreatePost';
+import ViewAllPosts from './pages/ViewAllPosts';
+import ViewMyPosts from './pages/ViewMyPosts';
+import EditPost from "./pages/EditPost";
 
 function App() {
   return (
@@ -29,8 +33,11 @@ function App() {
       <CssBaseline />
       <div className="min-h-screen bg-gray-100">
         <Routes>
+          {/* Authentication routes */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+
+          {/* Protected Routes */}
           <Route
             path="/"
             element={
@@ -63,11 +70,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* 🔁 Redirecting /team to /communities */}
-          <Route
-            path="/team"
-            element={<Navigate to="/communities" replace />}
-          />
           <Route
             path="/reports"
             element={
@@ -88,7 +90,7 @@ function App() {
             path="/notification"
             element={
               <ProtectedRoute>
-                 <NotificationList />
+                <NotificationList />
               </ProtectedRoute>
             }
           />
@@ -116,7 +118,12 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/*🚀 Communities */}
+          <Route
+            path="/team"
+            element={<Navigate to="/communities" replace />}
+          />
+
+          {/* 🚀 Communities */}
           <Route
             path="/communities"
             element={
@@ -130,6 +137,48 @@ function App() {
             element={
               <ProtectedRoute>
                 <CommunityFeed />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Samadhi's Post Routes */}
+          <Route
+            path="/homes"
+            element={
+              <ProtectedRoute>
+                <Homes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create-post"
+            element={
+              <ProtectedRoute>
+                <CreatePost />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/all-posts"
+            element={
+              <ProtectedRoute>
+                <ViewAllPosts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-posts"
+            element={
+              <ProtectedRoute>
+                <ViewMyPosts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit/:id"
+            element={
+              <ProtectedRoute>
+                <EditPost />
               </ProtectedRoute>
             }
           />
