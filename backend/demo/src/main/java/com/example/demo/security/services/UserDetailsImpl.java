@@ -46,6 +46,7 @@ public class UserDetailsImpl implements UserDetails {
         return email;
     }
 
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
