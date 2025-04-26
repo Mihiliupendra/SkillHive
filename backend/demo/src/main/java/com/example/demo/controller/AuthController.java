@@ -5,6 +5,7 @@ import com.example.demo.dto.UserInfoResponse;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.UserRegistrationDto;
 // import com.skillhive.repository.UserRepository;
+import com.example.demo.security.UserPrincipal;
 import com.example.demo.security.jwt.JwtUtils;
 import com.example.demo.security.services.UserDetailsImpl;
 import jakarta.validation.Valid;
@@ -24,7 +25,7 @@ import com.example.demo.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "*", maxAge = 36000)
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -44,7 +45,6 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails.getId(), userDetails.getUsername());
