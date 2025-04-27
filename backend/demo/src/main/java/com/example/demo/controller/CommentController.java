@@ -22,37 +22,31 @@ public class CommentController {
 
     @PostMapping
     public ResponseEntity<CommentDTO> createComment(
-            @Valid @RequestBody CommentDTO commentDTO,
-            @RequestHeader("X-User-Id") String userId,
-            @RequestHeader("X-User-Name") String userName) {
-        CommentDTO createdComment = commentService.createComment(commentDTO, userId, userName);
+            @Valid @RequestBody CommentDTO commentDTO) {
+        CommentDTO createdComment = commentService.createComment(commentDTO);
         return new ResponseEntity<>(createdComment, HttpStatus.CREATED);
     }
 
     @PostMapping("/reply/{parentCommentId}")
     public ResponseEntity<CommentDTO> replyToComment(
             @PathVariable String parentCommentId,
-            @Valid @RequestBody CommentDTO replyDTO,
-            @RequestHeader("X-User-Id") String userId,
-            @RequestHeader("X-User-Name") String userName) {
-        CommentDTO createdReply = commentService.replyToComment(parentCommentId, replyDTO, userId, userName);
+            @Valid @RequestBody CommentDTO replyDTO) {
+        CommentDTO createdReply = commentService.replyToComment(parentCommentId, replyDTO);
         return new ResponseEntity<>(createdReply, HttpStatus.CREATED);
     }
 
     @PutMapping("/{commentId}")
     public ResponseEntity<CommentDTO> updateComment(
             @PathVariable String commentId,
-            @Valid @RequestBody CommentDTO commentDTO,
-            @RequestHeader("X-User-Id") String userId) {
-        CommentDTO updatedComment = commentService.updateComment(commentId, commentDTO, userId);
+            @Valid @RequestBody CommentDTO commentDTO) {
+        CommentDTO updatedComment = commentService.updateComment(commentId, commentDTO);
         return ResponseEntity.ok(updatedComment);
     }
 
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(
-            @PathVariable String commentId,
-            @RequestHeader("X-User-Id") String userId) {
-        commentService.deleteComment(commentId, userId);
+            @PathVariable String commentId) {
+        commentService.deleteComment(commentId);
         return ResponseEntity.noContent().build();
     }
 

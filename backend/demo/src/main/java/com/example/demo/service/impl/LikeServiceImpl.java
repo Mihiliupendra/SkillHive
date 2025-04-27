@@ -1,12 +1,14 @@
 package com.example.demo.service.impl;
 
+
 import com.example.demo.dto.LikeDTO;
-import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Like;
 import com.example.demo.repository.LikeRepository;
+import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.LikeService;
 import com.example.demo.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,7 +24,9 @@ public class LikeServiceImpl implements LikeService {
     private final NotificationService notificationService;
 
     @Override
-    public LikeDTO likePost(String postId, String userId) {
+    public LikeDTO likePost(String postId) {
+        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String userId = userPrincipal.getId();
         // Check if user already liked the post
         Optional<Like> existingLike = likeRepository.findByPostIdAndUserId(postId, userId);
 
@@ -58,12 +62,17 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
-    public void unlikePost(String postId, String userId) {
+    public void unlikePost(String postId) {
+        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String userId = userPrincipal.getId();
+
         likeRepository.deleteByPostIdAndUserId(postId, userId);
     }
 
     @Override
-    public boolean hasUserLiked(String postId, String userId) {
+    public boolean hasUserLiked(String postId) {
+        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String userId = userPrincipal.getId();
         return likeRepository.findByPostIdAndUserId(postId, userId).isPresent();
     }
 
@@ -89,4 +98,6 @@ public class LikeServiceImpl implements LikeService {
                 .build();
     }
 }
+
+
 

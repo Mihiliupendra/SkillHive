@@ -5,9 +5,9 @@ import com.example.demo.dto.LikeDTO;
 import java.util.List;
 
 public interface LikeService {
-    LikeDTO likePost(String postId, String userId);
-    void unlikePost(String postId, String userId);
-    boolean hasUserLiked(String postId, String userId);
+    LikeDTO likePost(String postId);
+    void unlikePost(String postId);
+    boolean hasUserLiked(String postId);
     List<LikeDTO> getPostLikes(String postId);
     long getLikeCount(String postId);
 }

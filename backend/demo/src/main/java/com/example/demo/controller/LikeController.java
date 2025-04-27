@@ -20,25 +20,22 @@ public class LikeController {
 
     @PostMapping("/{postId}")
     public ResponseEntity<LikeDTO> likePost(
-            @PathVariable String postId,
-            @RequestHeader("X-User-Id") String userId) {
-        LikeDTO likeDTO = likeService.likePost(postId, userId);
+            @PathVariable String postId) {
+        LikeDTO likeDTO = likeService.likePost(postId);
         return new ResponseEntity<>(likeDTO, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> unlikePost(
-            @PathVariable String postId,
-            @RequestHeader("X-User-Id") String userId) {
-        likeService.unlikePost(postId, userId);
+            @PathVariable String postId) {
+        likeService.unlikePost(postId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/status/{postId}")
     public ResponseEntity<Map<String, Boolean>> checkLikeStatus(
-            @PathVariable String postId,
-            @RequestHeader("X-User-Id") String userId) {
-        boolean hasLiked = likeService.hasUserLiked(postId, userId);
+            @PathVariable String postId) {
+        boolean hasLiked = likeService.hasUserLiked(postId);
         return ResponseEntity.ok(Map.of("liked", hasLiked));
     }
 

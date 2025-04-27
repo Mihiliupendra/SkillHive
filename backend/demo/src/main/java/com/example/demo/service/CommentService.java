@@ -8,10 +8,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface CommentService {
-    CommentDTO createComment(CommentDTO commentDTO, String userId, String userDisplayName);
-    CommentDTO replyToComment(String parentCommentId, CommentDTO replyDTO, String userId, String userDisplayName);
-    CommentDTO updateComment(String commentId, CommentDTO commentDTO, String userId);
-    void deleteComment(String commentId, String userId);
+    CommentDTO createComment(CommentDTO commentDTO);
+    CommentDTO replyToComment(String parentCommentId, CommentDTO replyDTO);
+    CommentDTO updateComment(String commentId, CommentDTO commentDTO);
+    void deleteComment(String commentId);
     Page<CommentDTO> getPostComments(String postId, Pageable pageable);
     long getCommentCount(String postId);
 }

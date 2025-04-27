@@ -5,16 +5,19 @@ import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.exception.UnauthorizedException;
 import com.example.demo.model.Comment;
 import com.example.demo.repository.CommentRepository;
+import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.CommentService;
 import com.example.demo.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,7 +28,10 @@ public class CommentServiceImpl implements CommentService {
     private final NotificationService notificationService;
 
     @Override
-    public CommentDTO createComment(CommentDTO commentDTO, String userId, String userDisplayName) {
+    public CommentDTO createComment(CommentDTO commentDTO) {
+        UserPrincipal user = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String userId = user.getId();
+        String userDisplayName = user.getUsername();
         Comment comment = Comment.builder()
                 .content(commentDTO.getContent())
                 .postId(commentDTO.getPostId())
@@ -60,7 +66,10 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentDTO replyToComment(String parentCommentId, CommentDTO replyDTO, String userId, String userDisplayName) {
+    public CommentDTO replyToComment(String parentCommentId, CommentDTO replyDTO) {
+        UserPrincipal user = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String userId = user.getId();
+        String userDisplayName = user.getUsername();
         Comment parentComment = commentRepository.findById(parentCommentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Parent comment not found"));
 
@@ -98,11 +107,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentDTO updateComment(String commentId, CommentDTO commentDTO, String userId) {
+    public CommentDTO updateComment(String commentId, CommentDTO commentDTO) {
+        UserPrincipal user = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
 
-        if (!comment.getUserId().equals(userId)) {
+        if (!comment.getUserId().equals(user.getId())) {
             throw new UnauthorizedException("You can only edit your own comments");
         }
 
@@ -114,14 +124,15 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void deleteComment(String commentId, String userId) {
+    public void deleteComment(String commentId) {
+        UserPrincipal user = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
 
         String postOwnerId = "post-owner-id"; // This should be fetched from the Post service
 
         // Check if user is the comment owner or post owner
-        if (!comment.getUserId().equals(userId) && !postOwnerId.equals(userId)) {
+        if (!comment.getUserId().equals(user.getId()) && !postOwnerId.equals(user.getId())) {
             throw new UnauthorizedException("You can only delete your own comments or comments on your post");
         }
 
@@ -142,7 +153,7 @@ public class CommentServiceImpl implements CommentService {
             if (!comment.getReplies().isEmpty()) {
                 List<CommentDTO> replyDTOs = comment.getReplies().stream()
                         .map(replyId -> commentRepository.findById(replyId).orElse(null))
-                        .filter(reply -> reply != null)
+                        .filter(Objects::nonNull)
                         .map(this::mapToDTO)
                         .collect(Collectors.toList());
                 dto.setReplies(replyDTOs);
