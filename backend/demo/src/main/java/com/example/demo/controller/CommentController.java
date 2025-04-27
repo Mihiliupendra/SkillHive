@@ -1,20 +1,8 @@
 package com.example.demo.controller;
 
 
-
-import com.example.demo.dto.CommentDTO;
-import com.example.demo.model.Comment;
-import com.example.demo.service.CommentService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
-import java.util.List;
 import com.example.demo.dto.CommentDTO;
 import com.example.demo.service.CommentService;
-//import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +10,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/comments")
@@ -39,7 +29,7 @@ public class CommentController {
         return new ResponseEntity<>(createdComment, HttpStatus.CREATED);
     }
 
-    @PostMapping("/{parentCommentId}/replies")
+    @PostMapping("/reply/{parentCommentId}")
     public ResponseEntity<CommentDTO> replyToComment(
             @PathVariable String parentCommentId,
             @Valid @RequestBody CommentDTO replyDTO,
@@ -66,7 +56,7 @@ public class CommentController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/post/{postId}")
+    @GetMapping("/{postId}")
     public ResponseEntity<Page<CommentDTO>> getPostComments(
             @PathVariable String postId,
             @PageableDefault(size = 10) Pageable pageable) {
@@ -74,7 +64,7 @@ public class CommentController {
         return ResponseEntity.ok(comments);
     }
 
-    @GetMapping("/post/{postId}/count")
+    @GetMapping("/count/{postId}")
     public ResponseEntity<Long> getCommentCount(@PathVariable String postId) {
         long count = commentService.getCommentCount(postId);
         return ResponseEntity.ok(count);
