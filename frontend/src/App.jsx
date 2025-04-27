@@ -17,6 +17,8 @@ import Settings from './pages/Settings';
 import Communities from './pages/Communities';
 import CommunityFeed from './pages/CommunityFeed';
 import Connections from './pages/Connections';
+import CreateCommunity from './pages/CreateCommunity';
+
 
 import { NotificationProvider } from './context/NotificationContext';
 import NotificationIcon from './components/notifications/NotificationIcon';
@@ -125,6 +127,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Communities />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create-community"
+            element={
+              <ProtectedRoute>
+                <CreateCommunity />
               </ProtectedRoute>
             }
           />
