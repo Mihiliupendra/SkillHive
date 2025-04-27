@@ -3,26 +3,45 @@ import { likeService } from '../../services/likeService';
 
 const LikesList = ({ postId, isOpen, onClose }) => {
   const [likes, setLikes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchLikes = async () => {
-      if (!isOpen) return;
+      if (!isOpen || !postId) return;
       
       try {
         setLoading(true);
-        const response = await api.get(`/api/likes/${postId}`);
-        setLikes(response.data);
-        setLoading(false);
+        const likesData = await likeService.getPostLikes(postId);
+        
+        if (isMounted) {
+          setLikes(likesData);
+          setLoading(false);
+        }
       } catch (err) {
-        setError('Failed to load likes');
-        setLoading(false);
+        if (isMounted) {
+          console.error('Error fetching likes:', err);
+          setError('Failed to load likes');
+          setLoading(false);
+        }
       }
     };
 
     fetchLikes();
+
+    return () => {
+      isMounted = false;
+    };
   }, [postId, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setLikes([]);
+      setError(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -52,7 +71,7 @@ const LikesList = ({ postId, isOpen, onClose }) => {
               {likes.map(like => (
                 <li key={like.id} className="py-2 flex items-center">
                   <div className="w-8 h-8 bg-gray-200 rounded-full flex-shrink-0"></div>
-                  <span className="ml-3">{like.userName}</span>
+                  <span className="ml-3">{like.username}</span>
                 </li>
               ))}
             </ul>

@@ -6,7 +6,7 @@ import LikesList from '../components/likes/LikesList';
 
 export const mockPosts = [
   {
-    id: 1,
+    id: 'abc123',
     title: "Getting Started with React Development",
     content: "React is a powerful JavaScript library for building user interfaces. In this post, we'll explore the fundamental concepts of React and how to get started with your first React application.",
     userName: "John Doe",
@@ -59,15 +59,12 @@ const PostFeed = () => {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showLikes, setShowLikes] = useState(false);
+  const [likesModalState, setLikesModalState] = useState({});
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
         setLoading(true);
-        // Assume there's a post service to fetch post details
-        // const response = await api.get(`/api/posts/${postId}`);
-        // setPost(response.data);
         setPost(mockPosts);
         setLoading(false);
       } catch (err) {
@@ -78,6 +75,20 @@ const PostFeed = () => {
 
     fetchPost();
   }, [postId]);
+
+  const handleShowLikes = (postId) => {
+    setLikesModalState(prev => ({
+      ...prev,
+      [postId]: true
+    }));
+  };
+
+  const handleCloseLikes = (postId) => {
+    setLikesModalState(prev => ({
+      ...prev,
+      [postId]: false
+    }));
+  };
 
   if (loading) {
     return (
@@ -98,57 +109,54 @@ const PostFeed = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        {/* Post header */}
-        <div className="p-6">
-          <div className="flex items-center mb-4">
-            <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-            <div className="ml-3">
-              <div className="font-medium">{post.userName}</div>
-              <div className="text-xs text-gray-500">
-                {new Date(post.createdAt).toLocaleDateString()}
+    post.map((post) => (
+      <div className="max-w-4xl mx-auto py-8 px-4" key={post.id}>
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+              <div className="ml-3">
+                <div className="font-medium">{post.userName}</div>
+                <div className="text-xs text-gray-500">
+                  {new Date(post.createdAt).toLocaleDateString()}
+                </div>
               </div>
+            </div>
+            
+            <h1 className="text-xl font-semibold mb-3">{post.title}</h1>
+            <div className="prose max-w-none">{post.content}</div>
+            
+            <div className="mt-6 flex items-center space-x-4">
+              <LikeButton postId={post.id} />
+              
+              <button
+                onClick={() => handleShowLikes(post.id)}
+                className="text-sm text-gray-600 hover:text-gray-800"
+              >
+                View likes
+              </button>
+              
+              <button
+                className="text-sm text-gray-600 hover:text-gray-800"
+                onClick={() => document.getElementById(`comments-${post.id}`).scrollIntoView({ behavior: 'smooth' })}
+              >
+                Comments
+              </button>
             </div>
           </div>
           
-          {/* Post content */}
-          <h1 className="text-xl font-semibold mb-3">{post.title}</h1>
-          <div className="prose max-w-none">{post.content}</div>
-          
-          {/* Post actions */}
-          <div className="mt-6 flex items-center space-x-4">
-            <LikeButton postId={postId} />
-            
-            <button
-              onClick={() => setShowLikes(true)}
-              className="text-sm text-gray-600 hover:text-gray-800"
-            >
-              View likes
-            </button>
-            
-            <button
-              className="text-sm text-gray-600 hover:text-gray-800"
-              onClick={() => document.getElementById('comments').scrollIntoView({ behavior: 'smooth' })}
-            >
-              Comments
-            </button>
+          <div id={`comments-${post.id}`} className="border-t border-gray-200 p-6">
+            <CommentSection postId={post.id} />
           </div>
         </div>
         
-        {/* Comments section */}
-        <div id="comments" className="border-t border-gray-200 p-6">
-          <CommentSection postId={postId} />
-        </div>
+        <LikesList
+          postId={post.id}
+          isOpen={likesModalState[post.id] || false}
+          onClose={() => handleCloseLikes(post.id)}
+        />
       </div>
-      
-      {/* Likes modal */}
-      <LikesList
-        postId={postId}
-        isOpen={showLikes}
-        onClose={() => setShowLikes(false)}
-      />
-    </div>
+    ))
   );
 };
 

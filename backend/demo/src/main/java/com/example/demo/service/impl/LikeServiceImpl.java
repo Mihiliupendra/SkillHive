@@ -3,10 +3,13 @@ package com.example.demo.service.impl;
 
 import com.example.demo.dto.LikeDTO;
 import com.example.demo.model.Like;
+import com.example.demo.model.User;
 import com.example.demo.repository.LikeRepository;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.LikeService;
 import com.example.demo.service.NotificationService;
+import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,7 @@ public class LikeServiceImpl implements LikeService {
 
     private final LikeRepository likeRepository;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     @Override
     public LikeDTO likePost(String postId) {
@@ -79,9 +83,17 @@ public class LikeServiceImpl implements LikeService {
     @Override
     public List<LikeDTO> getPostLikes(String postId) {
         List<Like> likes = likeRepository.findByPostId(postId);
-        return likes.stream()
+        List<LikeDTO> likeList = likes.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+        for (LikeDTO likeDTO : likeList) {
+            String userId = likeDTO.getUserId();
+            String username = userRepository.findById(userId)
+                    .map(User::getUsername)
+                    .orElse("Unknown User");
+            likeDTO.setUsername(username);
+        }
+        return likeList;
     }
 
     @Override

@@ -1,4 +1,3 @@
-// src/services/commentService.js
 import api from '../api/axios';
 
 export const commentService = {
@@ -15,8 +14,12 @@ export const commentService = {
 
   // Add a new comment to a post
   addComment: async (postId, content) => {
+    const commentDTO = {
+      postId,
+      content
+    };
     try {
-      const response = await api.post(`/api/comments/${postId}`, { content });
+      const response = await api.post('/api/comments', commentDTO);
       return response.data;
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -25,9 +28,9 @@ export const commentService = {
   },
 
   // Add a reply to a comment
-  replyToComment: async (postId, parentCommentId, content) => {
+  replyToComment: async (parentCommentId, replyDTO) => {
     try {
-      const response = await api.post(`/api/comments/${postId}/reply/${parentCommentId}`, { content });
+      const response = await api.post(`/api/comments/reply/${parentCommentId}`, replyDTO);
       return response.data;
     } catch (error) {
       console.error('Error replying to comment:', error);
@@ -36,9 +39,9 @@ export const commentService = {
   },
 
   // Edit a comment
-  editComment: async (commentId, content) => {
+  editComment: async (commentId, commentDTO) => {
     try {
-      const response = await api.put(`/api/comments/${commentId}`, { content });
+      const response = await api.put(`/api/comments/${commentId}`, commentDTO);
       return response.data;
     } catch (error) {
       console.error('Error editing comment:', error);
@@ -49,13 +52,22 @@ export const commentService = {
   // Delete a comment
   deleteComment: async (commentId) => {
     try {
-      const response = await api.delete(`/api/comments/${commentId}`);
-      return response.data;
+      await api.delete(`/api/comments/${commentId}`);
+      return true;
     } catch (error) {
       console.error('Error deleting comment:', error);
       throw error;
     }
+  },
+
+  // Get comment count for a post
+  getCommentCount: async (postId) => {
+    try {
+      const response = await api.get(`/api/comments/count/${postId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching comment count:', error);
+      throw error;
+    }
   }
 };
-
-

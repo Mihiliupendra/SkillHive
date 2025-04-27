@@ -1,4 +1,3 @@
-// src/services/likeService.js
 import api from '../api/axios';
 
 export const likeService = {
@@ -16,8 +15,8 @@ export const likeService = {
   // Unlike a post
   unlikePost: async (postId) => {
     try {
-      const response = await api.delete(`/api/likes/${postId}`);
-      return response.data;
+      await api.delete(`/api/likes/${postId}`);
+      return true;
     } catch (error) {
       console.error('Error unliking post:', error);
       throw error;
@@ -27,10 +26,21 @@ export const likeService = {
   // Check if the current user has liked a post
   hasLiked: async (postId) => {
     try {
-      const response = await api.get(`/api/likes/${postId}/check`);
-      return response.data;
+      const response = await api.get(`/api/likes/status/${postId}`);
+      return response.data.liked;
     } catch (error) {
       console.error('Error checking like status:', error);
+      throw error;
+    }
+  },
+
+  // Get all likes for a post
+  getPostLikes: async (postId) => {
+    try {
+      const response = await api.get(`/api/likes/${postId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching post likes:', error);
       throw error;
     }
   },
@@ -38,7 +48,7 @@ export const likeService = {
   // Get like count for a post
   getLikeCount: async (postId) => {
     try {
-      const response = await api.get(`/api/likes/${postId}/count`);
+      const response = await api.get(`/api/likes/count/${postId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching like count:', error);
