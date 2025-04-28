@@ -84,13 +84,13 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          boxShadow: '0 8px 24px rgba(0, 43, 91, 0.08)',
+          borderRadius: 12,
+          boxShadow: '0 4px 12px rgba(0, 43, 91, 0.08)',
           transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-          border: '1px solid rgba(0, 43, 91, 0.08)',
+          border: '1px solid rgba(0, 43, 91, 0.05)',
           '&:hover': {
-            transform: 'translateY(-8px)',
-            boxShadow: '0 16px 32px rgba(0, 43, 91, 0.12)',
+            transform: 'translateY(-4px)',
+            boxShadow: '0 8px 16px rgba(0, 43, 91, 0.12)',
           },
         },
       },
@@ -99,8 +99,11 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           fontWeight: 500,
-          fontSize: '0.75rem',
-          height: 24,
+          fontSize: '0.7rem',
+          height: 22,
+          '& .MuiChip-label': {
+            padding: '0 8px',
+          }
         },
         colorPrimary: {
           backgroundColor: alpha('#002B5B', 0.1),
@@ -118,33 +121,35 @@ const theme = createTheme({
           textTransform: 'none',
           fontWeight: 600,
           letterSpacing: 0.5,
+          borderRadius: 8,
         },
         containedPrimary: {
-          borderRadius: 12,
-          padding: '8px 24px',
-          boxShadow: '0 4px 12px rgba(0, 43, 91, 0.15)',
+          padding: '6px 16px',
+          boxShadow: '0 2px 8px rgba(0, 43, 91, 0.12)',
           '&:hover': {
-            boxShadow: '0 6px 16px rgba(0, 43, 91, 0.2)',
+            boxShadow: '0 4px 12px rgba(0, 43, 91, 0.2)',
           },
         },
         containedSecondary: {
-          borderRadius: 12,
-          padding: '8px 24px',
-          boxShadow: '0 4px 12px rgba(247, 147, 30, 0.25)',
+          padding: '6px 16px',
+          boxShadow: '0 2px 8px rgba(247, 147, 30, 0.2)',
           '&:hover': {
-            boxShadow: '0 6px 16px rgba(247, 147, 30, 0.35)',
+            boxShadow: '0 4px 12px rgba(247, 147, 30, 0.3)',
           },
         },
         outlinedPrimary: {
-          borderRadius: 12,
-          padding: '8px 24px',
-          borderWidth: 2,
+          padding: '6px 16px',
+          borderWidth: 1.5,
           '&:hover': {
-            borderWidth: 2,
+            borderWidth: 1.5,
           },
         },
+        sizeSmall: {
+          fontSize: '0.75rem',
+          padding: '4px 12px',
+        },
         sizeMedium: {
-          fontSize: '0.875rem',
+          fontSize: '0.8125rem',
         },
       },
     },
@@ -181,74 +186,90 @@ const theme = createTheme({
 });
 
 const Communities = () => {
-  const [communities, setCommunities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [myCommunities, setMyCommunities] = useState([]);
+  const [discoverCommunities, setDiscoverCommunities] = useState([]);
+  const [loading, setLoading] = useState({ my: true, discover: true });
+  const [page, setPage] = useState({ my: 0, discover: 0 });
+  const [totalPages, setTotalPages] = useState({ my: 0, discover: 0 });
   const [filters, setFilters] = useState({
     name: '',
-    visibility: 'public',
     category: '',
     tag: ''
   });
   const [showFilters, setShowFilters] = useState(false);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
-  const pageSize = 9;
+  const pageSize = 6; // Reduced page size since we're showing two sections
 
   useEffect(() => {
-    fetchCommunities();
-  }, [page, filters, user]);
+    if (user) {
+      fetchMyCommunities();
+      fetchDiscoverCommunities();
+    }
+  }, [page.my, page.discover, filters, user]);
 
-  const fetchCommunities = async () => {
-    setLoading(true);
+  const fetchMyCommunities = async () => {
+    if (!user) return;
+    setLoading(prev => ({ ...prev, my: true }));
+    
     try {
       const apiFilters = {
-        page,
-        size: pageSize
+        page: page.my,
+        size: pageSize,
+        memberId: user.id
       };
 
       if (filters.name) apiFilters.name = filters.name;
       if (filters.category) apiFilters.category = filters.category;
       if (filters.tag) apiFilters.tag = filters.tag;
 
-      if (filters.visibility === 'public') {
-        apiFilters.visibility = 'public';
-      } else if (filters.visibility === 'member' && user) {
-        apiFilters.memberId = user.id;
-      } else if (filters.visibility === 'admin' && user) {
-        apiFilters.adminId = user.id;
-      }
-
-      const response = await CommunityService.getCommunities(page, pageSize, apiFilters);
+      const response = await CommunityService.getCommunities(page.my, pageSize, apiFilters);
       
       if (response.data && Array.isArray(response.data.content)) {
-        setCommunities(response.data.content);
-        setTotalPages(response.data.totalPages);
-      } else {
-        console.error('Unexpected response format:', response.data);
-        setCommunities([]);
-        setTotalPages(0);
+        setMyCommunities(response.data.content);
+        setTotalPages(prev => ({ ...prev, my: response.data.totalPages }));
       }
     } catch (error) {
-      console.error('Error fetching communities:', error);
-      setCommunities([]);
-      setTotalPages(0);
+      console.error('Error fetching my communities:', error);
+      setMyCommunities([]);
+      setTotalPages(prev => ({ ...prev, my: 0 }));
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, my: false }));
     }
   };
 
-  const handleFilterChange = (name, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setPage(0);
+  const fetchDiscoverCommunities = async () => {
+    if (!user) return;
+    setLoading(prev => ({ ...prev, discover: true }));
+    
+    try {
+      const apiFilters = {
+        page: page.discover,
+        size: pageSize,
+        excludeMemberId: user.id // Exclude communities user is already a member of
+      };
+
+      if (filters.name) apiFilters.name = filters.name;
+      if (filters.category) apiFilters.category = filters.category;
+      if (filters.tag) apiFilters.tag = filters.tag;
+
+      const response = await CommunityService.getCommunities(page.discover, pageSize, apiFilters);
+      
+      if (response.data && Array.isArray(response.data.content)) {
+        setDiscoverCommunities(response.data.content);
+        setTotalPages(prev => ({ ...prev, discover: response.data.totalPages }));
+      }
+    } catch (error) {
+      console.error('Error fetching discover communities:', error);
+      setDiscoverCommunities([]);
+      setTotalPages(prev => ({ ...prev, discover: 0 }));
+    } finally {
+      setLoading(prev => ({ ...prev, discover: false }));
+    }
   };
 
-  const handlePageChange = (event, value) => {
-    setPage(value - 1);
+  const handlePageChange = (section) => (event, value) => {
+    setPage(prev => ({ ...prev, [section]: value - 1 }));
   };
 
   const handleJoin = async (communityId) => {
@@ -256,7 +277,7 @@ const Communities = () => {
     
     try {
       await CommunityService.addMember(communityId, user.id);
-      const updatedCommunities = communities.map(community => {
+      const updatedCommunities = discoverCommunities.map(community => {
         if (community.id === communityId) {
           const updatedMemberIds = community.memberIds ? [...community.memberIds] : [];
           if (!updatedMemberIds.includes(user.id)) {
@@ -266,7 +287,7 @@ const Communities = () => {
         }
         return community;
       });
-      setCommunities(updatedCommunities);
+      setDiscoverCommunities(updatedCommunities);
     } catch (error) {
       console.error('Error joining community:', error);
     }
@@ -277,7 +298,7 @@ const Communities = () => {
     
     try {
       await CommunityService.removeMember(communityId, user.id);
-      const updatedCommunities = communities.map(community => {
+      const updatedCommunities = myCommunities.map(community => {
         if (community.id === communityId && community.memberIds) {
           return { 
             ...community, 
@@ -286,7 +307,7 @@ const Communities = () => {
         }
         return community;
       });
-      setCommunities(updatedCommunities);
+      setMyCommunities(updatedCommunities);
     } catch (error) {
       console.error('Error leaving community:', error);
     }
@@ -329,6 +350,314 @@ const Communities = () => {
     return (words[0][0] + words[1][0]).toUpperCase();
   };
 
+  const renderCommunitySection = (title, description, communities, section, isLoading) => (
+    <Box sx={{ mb: 6 }}>
+      <Typography 
+        variant="h5" 
+        sx={{ 
+          mb: 2,
+          fontWeight: 700,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}
+      >
+        <GroupIcon sx={{ color: 'primary.main' }} />
+        {title}
+      </Typography>
+      
+      <Typography 
+        variant="body1" 
+        color="text.secondary" 
+        sx={{ mb: 3 }}
+      >
+        {description}
+      </Typography>
+
+      {isLoading ? (
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '200px'
+        }}>
+          <CircularProgress size={40} thickness={4} />
+        </Box>
+      ) : (
+        <>
+          <Grid 
+            container 
+            spacing={3}
+            justifyContent="flex-start"
+          >
+            {communities.length > 0 ? (
+              communities.map((community) => (
+                <Grid item xs={12} sm={6} md={4} key={community.id}>
+                  <Card 
+                    sx={{ 
+                      height: '100%',
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      position: 'relative',
+                      overflow: 'visible',
+                      maxWidth: { xs: '100%', sm: 340 },
+                      mx: 'auto',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: '0 12px 24px rgba(0, 43, 91, 0.12)'
+                      }
+                    }}
+                  >
+                    {/* Community Avatar */}
+                    <Avatar
+                      sx={{
+                        bgcolor: stringToColor(community.name),
+                        width: 48,
+                        height: 48,
+                        fontSize: '1.25rem',
+                        fontWeight: 'bold',
+                        position: 'absolute',
+                        top: -12,
+                        left: 12,
+                        border: '3px solid white',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        zIndex: 2
+                      }}
+                    >
+                      {getCommunityInitials(community.name)}
+                    </Avatar>
+                    
+                    {/* Card Header/Background */}
+                    <Box
+                      sx={{
+                        height: 40,
+                        bgcolor: alpha(stringToColor(community.name + '1'), 0.1),
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        width: '100%'
+                      }}
+                    />
+                    
+                    <CardContent sx={{ flexGrow: 1, pt: 2, px: 2, pb: 1 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Typography variant="subtitle1" component="h2" gutterBottom noWrap sx={{ 
+                          maxWidth: '80%', 
+                          fontWeight: 600,
+                          fontSize: '1rem'
+                        }}>
+                          {community.name}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          {community.isPublic ? (
+                            <Chip label="Public" color="success" size="small" />
+                          ) : (
+                            <Chip label="Private" color="default" size="small" />
+                          )}
+                        </Box>
+                      </Box>
+                      
+                      <Box sx={{ mb: 1, display: 'flex', gap: 0.5 }}>
+                        {isUserMember(community) && (
+                          <Chip label="Joined" color="primary" size="small" />
+                        )}
+                        {isUserAdmin(community) && (
+                          <Chip label="Admin" color="secondary" size="small" />
+                        )}
+                      </Box>
+                      
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary" 
+                        sx={{ 
+                          mb: 1.5,
+                          height: '3.6em',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          fontSize: '0.8125rem'
+                        }}
+                      >
+                        {community.description || 'No description available'}
+                      </Typography>
+                      
+                      <Divider sx={{ my: 1 }} />
+                      
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ 
+                          fontWeight: 500, 
+                          fontSize: '0.75rem',
+                          display: 'block',
+                          mb: 0.5
+                        }}>
+                          Category: {community.category || 'Uncategorized'}
+                        </Typography>
+                        
+                        {community.tags && community.tags.length > 0 && (
+                          <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {community.tags.slice(0, 3).map(tag => (
+                              <Chip 
+                                key={tag} 
+                                label={tag} 
+                                size="small" 
+                                variant="outlined" 
+                                sx={{ 
+                                  height: 20, 
+                                  '& .MuiChip-label': { 
+                                    fontSize: '0.7rem',
+                                    px: 0.5
+                                  } 
+                                }} 
+                              />
+                            ))}
+                            {community.tags.length > 3 && (
+                              <Chip 
+                                label={`+${community.tags.length - 3}`} 
+                                size="small" 
+                                variant="outlined" 
+                                sx={{ 
+                                  height: 20, 
+                                  '& .MuiChip-label': { 
+                                    fontSize: '0.7rem',
+                                    px: 0.5
+                                  } 
+                                }} 
+                              />
+                            )}
+                          </Box>
+                        )}
+                        
+                        <Box 
+                          sx={{ 
+                            mt: 1, 
+                            display: 'flex', 
+                            alignItems: 'center',
+                            color: 'primary.main',
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          <GroupIcon fontSize="inherit" sx={{ mr: 0.5 }} />
+                          <Typography variant="caption" fontWeight={500}>
+                            {community.memberIds ? community.memberIds.length : 0} members
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                    
+                    <Divider />
+                    
+                    <Box sx={{ display: 'flex', p: 1, justifyContent: 'space-between' }}>
+                      <Button 
+                        variant="contained" 
+                        size="small"
+                        color="primary"
+                        onClick={() => navigateToCommunity(community.id)}
+                        sx={{ 
+                          flex: '1 0 auto',
+                          mr: 0.5,
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        View
+                      </Button>
+                      
+                      {!isUserMember(community) ? (
+                        <Button 
+                          variant="outlined" 
+                          size="small"
+                          color="primary"
+                          onClick={() => handleJoin(community.id)}
+                          sx={{ 
+                            fontWeight: 'medium', 
+                            fontSize: '0.75rem',
+                            minWidth: 'auto'
+                          }}
+                        >
+                          Join
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outlined" 
+                          size="small"
+                          color="error"
+                          onClick={() => handleLeave(community.id)}
+                          disabled={isUserAdmin(community) && community.adminIds?.length === 1}
+                          sx={{ 
+                            fontWeight: 'medium', 
+                            fontSize: '0.75rem',
+                            minWidth: 'auto'
+                          }}
+                        >
+                          Leave
+                        </Button>
+                      )}
+                    </Box>
+                  </Card>
+                </Grid>
+              ))
+            ) : (
+              <Grid item xs={12}>
+                <Paper 
+                  elevation={0} 
+                  sx={{ 
+                    p: 4, 
+                    textAlign: 'center', 
+                    bgcolor: alpha(theme.palette.primary.light, 0.05),
+                    borderRadius: 2,
+                    border: '1px dashed',
+                    borderColor: 'divider'
+                  }}
+                >
+                  <Box sx={{ maxWidth: 500, mx: 'auto' }}>
+                    <Typography variant="h6" gutterBottom>
+                      {section === 'my' ? 
+                        "You haven't joined any communities yet" : 
+                        "No communities found matching your criteria"}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {section === 'my' ? 
+                        "Join communities to connect with like-minded professionals and access exclusive content." : 
+                        "Try adjusting your filters or create a new community to get started."}
+                    </Typography>
+                    {section === 'my' && (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setShowFilters(true)}
+                        startIcon={<SearchIcon />}
+                      >
+                        Discover Communities
+                      </Button>
+                    )}
+                  </Box>
+                </Paper>
+              </Grid>
+            )}
+          </Grid>
+
+          {totalPages[section] > 1 && (
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              mt: 4
+            }}>
+              <Pagination 
+                count={totalPages[section]} 
+                page={page[section] + 1} 
+                onChange={handlePageChange(section)}
+                color="primary"
+                size="large"
+              />
+            </Box>
+          )}
+        </>
+      )}
+    </Box>
+  );
+
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ 
@@ -343,8 +672,8 @@ const Communities = () => {
             width: '100%',
             background: 'linear-gradient(135deg, #002B5B 0%, #1A4B7A 100%)',
             color: 'white',
-            py: { xs: 6, md: 8 },
-            mb: 6,
+            py: { xs: 5, md: 6 },
+            mb: 5,
             position: 'relative',
             overflow: 'hidden',
             '&::before': {
@@ -367,6 +696,7 @@ const Communities = () => {
                 sx={{ 
                   fontWeight: 800,
                   mb: 2,
+                  fontSize: { xs: '2rem', md: '2.5rem' },
                   textShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
               >
@@ -378,7 +708,7 @@ const Communities = () => {
                   maxWidth: '800px', 
                   mb: 4, 
                   opacity: 0.9,
-                  fontSize: '1.25rem',
+                  fontSize: { xs: '1rem', md: '1.25rem' },
                   lineHeight: 1.6
                 }}
               >
@@ -451,34 +781,37 @@ const Communities = () => {
         </Box>
 
         <Container maxWidth="lg">
-          {/* Filters Section */}
+          {/* Filters Section - Centered with consistent width */}
           <Paper
             elevation={0}
             sx={{ 
-              p: 3, 
+              p: 2, 
               mb: 4, 
-              borderRadius: 3,
+              borderRadius: 2,
               bgcolor: 'background.paper',
               border: '1px solid',
               borderColor: 'divider',
-              boxShadow: '0 8px 16px rgba(0, 43, 91, 0.05)'
+              boxShadow: '0 4px 12px rgba(0, 43, 91, 0.05)',
+              width: '100%',
+              maxWidth: 900,
+              mx: 'auto'
             }}
           >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h5" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
-                <FilterListIcon color="primary" /> Filter Communities
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600 }}>
+                <FilterListIcon color="primary" fontSize="small" /> Filter Communities
               </Typography>
               <Button 
-                size="medium"
+                size="small"
                 onClick={() => setShowFilters(!showFilters)}
                 color="primary"
                 variant="outlined"
                 sx={{
-                  borderRadius: 12,
-                  px: 3,
-                  borderWidth: 2,
+                  borderRadius: 8,
+                  px: 2,
+                  borderWidth: 1.5,
                   '&:hover': {
-                    borderWidth: 2,
+                    borderWidth: 1.5,
                   }
                 }}
               >
@@ -490,18 +823,19 @@ const Communities = () => {
               <Box sx={{ 
                 display: 'flex', 
                 flexWrap: 'wrap', 
-                gap: 3,
+                gap: 2,
                 pt: 2,
                 borderTop: '1px solid',
-                borderColor: 'divider'
+                borderColor: 'divider',
+                justifyContent: 'center'
               }}>
-                <FormControl sx={{ minWidth: 200 }} size="small">
+                <FormControl sx={{ minWidth: 180 }} size="small">
                   <InputLabel>Community Type</InputLabel>
                   <Select
                     value={filters.visibility}
                     label="Community Type"
                     onChange={(e) => handleFilterChange('visibility', e.target.value)}
-                    sx={{ borderRadius: 12 }}
+                    sx={{ borderRadius: 8 }}
                   >
                     <MenuItem value="public">Public Communities</MenuItem>
                     <MenuItem value="category">By Category</MenuItem>
@@ -512,13 +846,13 @@ const Communities = () => {
                 </FormControl>
 
                 {filters.visibility === 'category' && (
-                  <FormControl sx={{ minWidth: 200 }} size="small">
+                  <FormControl sx={{ minWidth: 180 }} size="small">
                     <InputLabel>Category</InputLabel>
                     <Select
                       value={filters.category}
                       label="Category"
                       onChange={(e) => handleFilterChange('category', e.target.value)}
-                      sx={{ borderRadius: 12 }}
+                      sx={{ borderRadius: 8 }}
                     >
                       <MenuItem value="">All Categories</MenuItem>
                       {categories.map((category) => (
@@ -529,13 +863,13 @@ const Communities = () => {
                 )}
 
                 {filters.visibility === 'tag' && (
-                  <FormControl sx={{ minWidth: 200 }} size="small">
+                  <FormControl sx={{ minWidth: 180 }} size="small">
                     <InputLabel>Tag</InputLabel>
                     <Select
                       value={filters.tag}
                       label="Tag"
                       onChange={(e) => handleFilterChange('tag', e.target.value)}
-                      sx={{ borderRadius: 12 }}
+                      sx={{ borderRadius: 8 }}
                     >
                       <MenuItem value="">All Tags</MenuItem>
                       {tags.map((tag) => (
@@ -548,264 +882,25 @@ const Communities = () => {
             )}
           </Paper>
 
-          {/* Communities List */}
-          {loading ? (
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              minHeight: '300px',
-              my: 8 
-            }}>
-              <CircularProgress size={60} thickness={4} color="primary" />
-            </Box>
-          ) : (
-            <>
-              <Grid container spacing={3}>
-                {communities.length > 0 ? (
-                  communities.map((community) => (
-                    <Grid item xs={12} sm={6} md={4} key={community.id}>
-                      <Card 
-                        sx={{ 
-                          height: 350, // Fixed height for all cards
-                          display: 'flex', 
-                          flexDirection: 'column',
-                          position: 'relative',
-                          overflow: 'visible',
-                          maxWidth: 320, // Maximum width
-                          mx: 'auto' // Center card in grid cell
-                        }}
-                      >
-                        {/* Community Avatar */}
-                        <Avatar
-                          sx={{
-                            bgcolor: stringToColor(community.name),
-                            width: 60, // Slightly smaller avatar
-                            height: 60, // Slightly smaller avatar
-                            fontSize: '1.5rem', // Smaller font size
-                            fontWeight: 'bold',
-                            position: 'absolute',
-                            top: -15, // Adjusted position
-                            left: 15, // Adjusted position
-                            border: '4px solid white',
-                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                            zIndex: 2
-                          }}
-                        >
-                          {getCommunityInitials(community.name)}
-                        </Avatar>
-                        
-                        {/* Card Header/Background */}
-                        <Box
-                          sx={{
-                            height: 50, // Slightly smaller header
-                            bgcolor: stringToColor(community.name + '1') + '22',
-                            borderBottom: '1px solid',
-                            borderColor: 'divider',
-                            width: '100%'
-                          }}
-                        />
-                        
-                        <CardContent sx={{ flexGrow: 1, pt: 3, px: 2.5, pb: 1 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                            <Typography variant="h6" component="h2" gutterBottom noWrap sx={{ maxWidth: '80%', fontWeight: 600 }}>
-                              {community.name}
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 0.5 }}>
-                              {community.isPublic ? (
-                                <Chip label="Public" color="success" size="small" />
-                              ) : (
-                                <Chip label="Private" color="default" size="small" />
-                              )}
-                            </Box>
-                          </Box>
-                          
-                          <Box sx={{ mb: 1.5, display: 'flex', gap: 0.5 }}>
-                            {isUserMember(community) && (
-                              <Chip label="Joined" color="primary" size="small" />
-                            )}
-                            {isUserAdmin(community) && (
-                              <Chip label="Admin" color="secondary" size="small" />
-                            )}
-                          </Box>
-                          
-                          <Typography 
-                            variant="body2" 
-                            color="text.secondary" 
-                            sx={{ 
-                              mb: 1.5,
-                              height: '4.5em', // Fixed height for description
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: 'vertical',
-                              fontSize: '0.875rem' // Slightly smaller font
-                            }}
-                          >
-                            {community.description || 'No description available'}
-                          </Typography>
-                          
-                          <Divider sx={{ my: 1 }} />
-                          
-                          <Box sx={{ mt: 1 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
-                              Category: {community.category || 'Uncategorized'}
-                            </Typography>
-                            
-                            {community.tags && community.tags.length > 0 && (
-                              <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                {community.tags.slice(0, 3).map(tag => (
-                                  <Chip key={tag} label={tag} size="small" variant="outlined" sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.75rem' } }} />
-                                ))}
-                                {community.tags.length > 3 && (
-                                  <Chip label={`+${community.tags.length - 3}`} size="small" variant="outlined" sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.75rem' } }} />
-                                )}
-                              </Box>
-                            )}
-                            
-                            <Box 
-                              sx={{ 
-                                mt: 1.5, 
-                                display: 'flex', 
-                                alignItems: 'center',
-                                color: 'primary.main'
-                              }}
-                            >
-                              <GroupIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
-                              <Typography variant="body2" fontWeight={500} fontSize="0.875rem">
-                                {community.memberIds ? community.memberIds.length : 0} members
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </CardContent>
-                        
-                        <Divider />
-                        
-                        <Box sx={{ display: 'flex', p: 1.25, justifyContent: 'space-between' }}>
-                          <Button 
-                            variant="contained" 
-                            size="small"
-                            color="primary"
-                            onClick={() => navigateToCommunity(community.id)}
-                            sx={{ 
-                              flex: '1 0 auto',
-                              mr: 1,
-                              fontWeight: 'bold',
-                              fontSize: '0.8125rem'
-                            }}
-                          >
-                            View
-                          </Button>
-                          
-                          {!isUserMember(community) ? (
-                            <Button 
-                              variant="outlined" 
-                              size="small"
-                              color="primary"
-                              onClick={() => handleJoin(community.id)}
-                              sx={{ fontWeight: 'medium', fontSize: '0.8125rem' }}
-                            >
-                              Join
-                            </Button>
-                          ) : (
-                            <Button 
-                              variant="outlined" 
-                              size="small"
-                              color="error"
-                              onClick={() => handleLeave(community.id)}
-                              disabled={isUserAdmin(community) && community.adminIds?.length === 1}
-                              sx={{ fontWeight: 'medium', fontSize: '0.8125rem' }}
-                            >
-                              Leave
-                            </Button>
-                          )}
-                        </Box>
-                      </Card>
-                    </Grid>
-                  ))
-                ) : (
-                  <Grid item xs={12}>
-                    <Paper 
-                      elevation={0} 
-                      sx={{ 
-                        p: 6, 
-                        textAlign: 'center', 
-                        bgcolor: alpha(theme.palette.primary.light, 0.05),
-                        borderRadius: 3,
-                        border: '1px dashed',
-                        borderColor: 'divider'
-                      }}
-                    >
-                      <Box sx={{ maxWidth: 500, mx: 'auto' }}>
-                        <Typography 
-                          variant="h5" 
-                          sx={{ 
-                            mb: 2, 
-                            color: 'text.primary',
-                            fontWeight: 600
-                          }}
-                        >
-                          {filters.visibility === 'member' ? "You haven't joined any communities yet" : 
-                          filters.visibility === 'admin' ? "You don't administer any communities" : 
-                          "No communities found matching your filters"}
-                        </Typography>
-                        <Typography 
-                          variant="body1" 
-                          color="text.secondary" 
-                          sx={{ mb: 3 }}
-                        >
-                          {filters.visibility === 'member' ? 
-                            "Join communities to connect with like-minded professionals and access exclusive content." : 
-                            "Try adjusting your filters or create a new community to get started."}
-                        </Typography>
-                        <Button 
-                          variant="contained" 
-                          color="primary"
-                          onClick={() => navigate('/create-community')}
-                          startIcon={<AddIcon />}
-                          size="large"
-                          sx={{
-                            px: 4,
-                            py: 1.5,
-                            borderRadius: 12,
-                            fontWeight: 600
-                          }}
-                        >
-                          Create a New Community
-                        </Button>
-                      </Box>
-                    </Paper>
-                  </Grid>
-                )}
-              </Grid>
-              
-              {totalPages > 1 && (
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  mt: 6, 
-                  mb: 2 
-                }}>
-                  <Pagination 
-                    count={totalPages} 
-                    page={page + 1} 
-                    onChange={handlePageChange} 
-                    color="primary" 
-                    size="large"
-                    sx={{
-                      '& .MuiPaginationItem-root': {
-                        fontSize: '1rem',
-                        fontWeight: 600,
-                      },
-                      '& .MuiPaginationItem-page.Mui-selected': {
-                        boxShadow: '0 4px 8px rgba(0, 43, 91, 0.2)',
-                      }
-                    }}
-                  />
-                </Box>
-              )}
-            </>
+          {/* My Communities Section */}
+          {renderCommunitySection(
+            "My Communities",
+            "Communities you've joined and are actively participating in",
+            myCommunities,
+            'my',
+            loading.my
+          )}
+
+          {/* Divider */}
+          <Divider sx={{ my: 6 }} />
+
+          {/* Discover Section */}
+          {renderCommunitySection(
+            "Discover Communities",
+            "Explore new communities that match your interests",
+            discoverCommunities,
+            'discover',
+            loading.discover
           )}
         </Container>
       </Box>
