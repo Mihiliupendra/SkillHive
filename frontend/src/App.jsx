@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './components/profile/Profile';
+
 import NotificationBell from "./components/Notification/NotificationBell.jsx"
 import { useNotifications } from "./hooks/useNotifications.js"
 
@@ -21,6 +22,12 @@ import Connections from './pages/Connections';
 
 
 import NotificationList from './components/Notification/NotificationList';
+import Dashboard from './components/Dashboard.jsx';
+import AddProgress from './pages/AddProgress.jsx';
+import Achievements from './pages/Achievements.jsx';
+import Navbar from './components/Navbar.jsx';
+import ProgressNavbar from './components/progress/ProgressNavbar.jsx';
+import ProjectsLayout from './pages/ProjectsLayout.jsx';
 
 
 function App() {
@@ -56,13 +63,14 @@ function App() {
             }
           />
           <Route
-            path="/projects"
+            path="/projects/*"
             element={
               <ProtectedRoute>
-                <div>Projects Page</div>
+                <ProjectsLayout />
               </ProtectedRoute>
             }
           />
+
           {/* 🔁 Redirecting /team to /communities */}
           <Route
             path="/team"
@@ -88,7 +96,7 @@ function App() {
             path="/notification"
             element={
               <ProtectedRoute>
-                 <NotificationList />
+                <NotificationList />
               </ProtectedRoute>
             }
           />
