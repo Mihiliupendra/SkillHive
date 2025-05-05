@@ -697,96 +697,7 @@ const CommunityFeed = () => {
       </BannerPaper>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          {isMember && (
-            <SectionPaper sx={{ 
-              mb: 3, 
-              p: 0, 
-              overflow: 'visible', 
-              borderTop: `4px solid ${themeColors.accent}`
-            }}>
-              <Box sx={{ p: 3 }}>
-                <CreatePostForm communityId={communityId} onPostCreated={fetchCommunityPosts} />
-              </Box>
-            </SectionPaper>
-          )}
-
-          {postsLoading ? (
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              height: '200px' 
-            }}>
-              <CircularProgress sx={{ color: themeColors.accent }} />
-            </Box>
-          ) : posts.length > 0 ? (
-            <>
-              <PostsHeader>
-                <SectionTitle variant="h6">
-                  Community Posts
-                </SectionTitle>
-              </PostsHeader>
-              
-              {posts.map((post, index) => (
-                <Box key={post.id} sx={{ mb: 3 }}>
-                  <PostCard post={post} />
-                </Box>
-              ))}
-              
-              {totalPages > 1 && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                  <Pagination 
-                    count={totalPages} 
-                    page={page + 1} 
-                    onChange={handlePageChange} 
-                    sx={{
-                      '& .MuiPaginationItem-root': {
-                        color: themeColors.primary
-                      },
-                      '& .Mui-selected': {
-                        backgroundColor: alpha(themeColors.accent, 0.15),
-                        color: themeColors.accent,
-                        fontWeight: 'bold',
-                        '&:hover': {
-                          backgroundColor: alpha(themeColors.accent, 0.25)
-                        }
-                      }
-                    }}
-                  />
-                </Box>
-              )}
-            </>
-          ) : (
-            <EmptyStatePaper elevation={0}>
-              <Box sx={{ py: 4 }}>
-                <Typography variant="h6" sx={{ color: themeColors.primary, mb: 1 }}>
-                  No posts in this community yet
-                </Typography>
-                {isMember && (
-                  <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                    Be the first to share your thoughts with the community!
-                  </Typography>
-                )}
-                {isMember && (
-                  <Button 
-                    variant="contained" 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    sx={{
-                      backgroundColor: themeColors.accent,
-                      color: themeColors.white,
-                      '&:hover': {
-                        backgroundColor: alpha(themeColors.accent, 0.85)
-                      }
-                    }}
-                  >
-                    Create a Post
-                  </Button>
-                )}
-              </Box>
-            </EmptyStatePaper>
-          )}
-        </Grid>
+        
 
         <Grid item xs={12} md={4}>
           <SectionPaper>
@@ -947,6 +858,97 @@ const CommunityFeed = () => {
               <Typography variant="body2" color="text.secondary">No members yet</Typography>
             )}
           </SectionPaper>
+        </Grid>
+
+        <Grid item xs={12} md={8}>
+          {isMember && (
+            <SectionPaper sx={{ 
+              mb: 3, 
+              p: 0, 
+              overflow: 'visible', 
+              borderTop: `4px solid ${themeColors.accent}`
+            }}>
+              <Box sx={{ p: 3 }}>
+                <CreatePostForm communityId={communityId} onPostCreated={fetchCommunityPosts} />
+              </Box>
+            </SectionPaper>
+          )}
+
+          {postsLoading ? (
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              height: '200px' 
+            }}>
+              <CircularProgress sx={{ color: themeColors.accent }} />
+            </Box>
+          ) : posts.length > 0 ? (
+            <>
+              <PostsHeader>
+                <SectionTitle variant="h6">
+                  Community Posts
+                </SectionTitle>
+              </PostsHeader>
+              
+              {posts.map((post, index) => (
+                <Box key={post.id} sx={{ mb: 3 }}>
+                  <PostCard post={post} />
+                </Box>
+              ))}
+              
+              {totalPages > 1 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                  <Pagination 
+                    count={totalPages} 
+                    page={page + 1} 
+                    onChange={handlePageChange} 
+                    sx={{
+                      '& .MuiPaginationItem-root': {
+                        color: themeColors.primary
+                      },
+                      '& .Mui-selected': {
+                        backgroundColor: alpha(themeColors.accent, 0.15),
+                        color: themeColors.accent,
+                        fontWeight: 'bold',
+                        '&:hover': {
+                          backgroundColor: alpha(themeColors.accent, 0.25)
+                        }
+                      }
+                    }}
+                  />
+                </Box>
+              )}
+            </>
+          ) : (
+            <EmptyStatePaper elevation={0}>
+              <Box sx={{ py: 4 }}>
+                <Typography variant="h6" sx={{ color: themeColors.primary, mb: 1 }}>
+                  No posts in this community yet
+                </Typography>
+                {isMember && (
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                    Be the first to share your thoughts with the community!
+                  </Typography>
+                )}
+                {isMember && (
+                  <Button 
+                    variant="contained" 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    sx={{
+                      backgroundColor: themeColors.accent,
+                      color: themeColors.white,
+                      '&:hover': {
+                        backgroundColor: alpha(themeColors.accent, 0.85)
+                      }
+                    }}
+                  >
+                    Create a Post
+                  </Button>
+                )}
+              </Box>
+            </EmptyStatePaper>
+          )}
         </Grid>
       </Grid>
     </Container>
