@@ -1,7 +1,15 @@
 import api from './axios';
 
 export const userService = {
-  
+  getUserById: async (userId) => {
+    try {
+      const response = await api.get(`/api/users/${userId}/profile`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error.response?.data || error.message;
+    }
+  },
 
   updateProfile: async (userId, profileData) => {
     try {
