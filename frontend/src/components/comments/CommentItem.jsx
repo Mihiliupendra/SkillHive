@@ -33,7 +33,7 @@ const handleEdit = (content) => {
         {/* Comment header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
-            <div className="font-medium">{comment.userName || 'Anonymous'}</div>
+            <div className="font-medium">{comment.userName || 'sanju'}</div>
             <span className="ml-2 text-xs text-gray-500">
               {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
               {comment.edited && <span className="ml-1">(edited)</span>}
