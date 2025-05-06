@@ -9,6 +9,8 @@ const CommentSection = ({ postId }) => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [showComments, setShowComments] = useState(true); // <-- Add this line
+const [commentCount, setCommentCount] = useState(0);
 
   const fetchComments = async () => {
     try {
@@ -28,10 +30,20 @@ const CommentSection = ({ postId }) => {
       setLoading(false);
     }
   };
+  const fetchCommentCount = async () => {
+    try {
+      const count = await commentService.getCommentCount(postId);
+      setCommentCount(count);
+    } catch {
+      setCommentCount(0);
+    }
+  };
 
   useEffect(() => {
     fetchComments();
+    fetchCommentCount();
   }, [postId, page]);
+ 
 
   const handleAddComment = async (content) => {
     try {
@@ -51,6 +63,7 @@ const handleReply = async (parentCommentId, content) => {
     };
     const newReply = await commentService.replyToComment(parentCommentId, replyDTO);
 
+
     // Update the comment tree with the new reply
     setComments(prev => 
       prev.map(comment => {
@@ -69,16 +82,19 @@ const handleReply = async (parentCommentId, content) => {
 };
 // ...existing code...
 
-  const handleEdit = async (commentId, content) => {
-    try {
-      const updatedComment = await commentService.editComment(commentId, content);
-      
-      // Find and update the comment in the tree
-      setComments(prev => updateCommentInTree(prev, updatedComment));
-    } catch (err) {
-      setError('Failed to edit comment');
-    }
-  };
+
+const handleEdit = async (commentId, content) => {
+  try {
+    const updatedComment = await commentService.editComment(commentId, {
+      content,
+      postId, // <-- add postId as required by backend
+    });
+    setComments(prev => updateCommentInTree(prev, updatedComment));
+  } catch (err) {
+    setError('Failed to edit comment');
+  }
+};
+// ...existing code...
 
   const handleDelete = async (commentId) => {
     try {
@@ -132,46 +148,55 @@ const handleReply = async (parentCommentId, content) => {
 
   return (
     <div className="mt-6 space-y-6">
-      <h3 className="text-xl font-semibold">Comments</h3>
-      
-      <CommentForm onSubmit={handleAddComment} placeholder="Add a comment..." />
-      
-      {error && (
-        <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
-          {error}
-        </div>
-      )}
-      
-      <div className="space-y-4">
-        {comments.map(comment => (
-          <CommentItem 
-            key={comment.id}
-            comment={comment}
-            onReply={handleReply}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ))}
+      <div>
+        <button
+          className="text-sm text-gray-700 hover:underline"
+          onClick={() => setShowComments(prev => !prev)}
+        >
+          {showComments
+            ? `Hide Comments`
+            : `Show Comments (${commentCount})`}
+        </button>
       </div>
-      
-      {loading && (
-        <div className="py-4 text-center">
-          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
-        </div>
-      )}
-      
-      {!loading && hasMore && (
-        <div className="text-center">
-          <button 
-            onClick={loadMore}
-            className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800"
-          >
-            Load More Comments
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
 
-export default CommentSection;
+      {showComments && (
+        <>
+          <h3 className="text-xl font-semibold">Comments</h3>
+          <CommentForm onSubmit={handleAddComment} placeholder="Add a comment..." />
+          {error && (
+            <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
+              {error}
+            </div>
+          )}
+          <div className="space-y-4">
+            {comments.map(comment => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                onReply={handleReply}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              /> ))}
+              </div>
+              {loading && (
+                <div className="py-4 text-center">
+                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
+                </div>
+              )}
+              {!loading && hasMore && (
+                <div className="text-center">
+                  <button
+                    onClick={loadMore}
+                    className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Load More Comments
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      );
+    };
+    
+    export default CommentSection;
