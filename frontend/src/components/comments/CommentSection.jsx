@@ -42,26 +42,32 @@ const CommentSection = ({ postId }) => {
     }
   };
   
-  const handleReply = async (parentCommentId, content) => {
-    try {
-      const newReply = await commentService.replyToComment(postId, parentCommentId, content);
-      
-      // Update the comment tree with the new reply
-      setComments(prev => 
-        prev.map(comment => {
-          if (comment.id === parentCommentId) {
-            return {
-              ...comment,
-              replies: [...(comment.replies || []), newReply]
-            };
-          }
-          return comment;
-        })
-      );
-    } catch (err) {
-      setError('Failed to add reply');
-    }
-  };
+  // ...existing code...
+const handleReply = async (parentCommentId, content) => {
+  try {
+    const replyDTO = {
+      postId,    // <-- required by backend
+      content
+    };
+    const newReply = await commentService.replyToComment(parentCommentId, replyDTO);
+
+    // Update the comment tree with the new reply
+    setComments(prev => 
+      prev.map(comment => {
+        if (comment.id === parentCommentId) {
+          return {
+            ...comment,
+            replies: [...(comment.replies || []), newReply]
+          };
+        }
+        return comment;
+      })
+    );
+  } catch (err) {
+    setError('Failed to add reply');
+  }
+};
+// ...existing code...
 
   const handleEdit = async (commentId, content) => {
     try {
