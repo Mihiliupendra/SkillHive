@@ -4,15 +4,14 @@ import { createProgress } from '../api/api';
 
 const Alert = ({ message, type, onClose }) => {
   const bgColor = type === 'success' ? 'bg-green-100' : 'bg-red-100';
-  const textColor = type === 'success' ? 'text-green-800' : 'text-red-800';
   const borderColor = type === 'success' ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500';
 
   return (
-    <div className={`p-4 rounded-md mb-6 flex items-center justify-between ${bgColor} ${textColor} ${borderColor}`}>
+    <div className={`p-4 rounded-md mb-6 flex items-center justify-between ${bgColor} text-black ${borderColor}`}>
       <div>{message}</div>
       <button
         onClick={onClose}
-        className="text-gray-500 hover:text-gray-700"
+        className="text-black hover:text-orange-500"
       >
         &times;
       </button>
@@ -24,6 +23,7 @@ const AddProgress = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     topic: '',
@@ -33,19 +33,12 @@ const AddProgress = () => {
     nextSteps: '',
     reflection: '',
     template: '',
-    // Template-specific fields will be added dynamically
   });
 
   const [showTemplateFields, setShowTemplateFields] = useState(false);
 
   const statusOptions = ['In Progress', 'Completed', 'On Hold', 'Planned'];
-
-  const templateOptions = [
-    'Completed Project/Task',
-    'Certification/Qualification',
-    'Challenges/Competitions',
-    'Workshops/Bootcamps'
-  ];
+  const templateOptions = ['Completed Project/Task', 'Certification/Qualification', 'Challenges/Competitions', 'Workshops/Bootcamps'];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -53,149 +46,57 @@ const AddProgress = () => {
       ...formData,
       [name]: value
     });
-
-    // Show template-specific fields when template is selected
     if (name === 'template') {
       setShowTemplateFields(true);
     }
   };
+
+  const InputField = ({ label, name, value, onChange, type = "text", placeholder = "" }) => (
+    <div className="mb-6">
+      <label htmlFor={name} className="block mb-2 font-medium text-black">{label}</label>
+      <input
+        type={type}
+        id={name}
+        name={name}
+        className={`w-full px-4 py-3 border ${errors[name] ? 'border-red-500' : 'border-gray-200'} rounded-md focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all bg-white text-black`}
+        value={value || ''}
+        onChange={onChange}
+        placeholder={placeholder}
+      />
+      {errors[name] && <p className="text-sm text-red-500 mt-2">{errors[name]}</p>}
+    </div>
+  );
 
   const renderTemplateFields = () => {
     switch (formData.template) {
       case 'Completed Project/Task':
         return (
           <>
-            <div className="mb-6">
-              <label htmlFor="projectName" className="block mb-2 font-medium text-gray-600">Project Name</label>
-              <input
-                type="text"
-                id="projectName"
-                name="projectName"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.projectName || ''}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="mb-6">
-              <label htmlFor="projectLink" className="block mb-2 font-medium text-gray-600">Project Link</label>
-              <input
-                type="text"
-                id="projectLink"
-                name="projectLink"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.projectLink || ''}
-                onChange={handleInputChange}
-              />
-            </div>
+            <InputField label="Project Name" name="projectName" value={formData.projectName} onChange={handleInputChange} />
+            <InputField label="Project Link" name="projectLink" value={formData.projectLink} onChange={handleInputChange} />
           </>
         );
       case 'Certification/Qualification':
         return (
           <>
-            <div className="mb-6">
-              <label htmlFor="certificationName" className="block mb-2 font-medium text-gray-600">Certification Name</label>
-              <input
-                type="text"
-                id="certificationName"
-                name="certificationName"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.certificationName || ''}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="mb-6">
-              <label htmlFor="provider" className="block mb-2 font-medium text-gray-600">Provider</label>
-              <input
-                type="text"
-                id="provider"
-                name="provider"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.provider || ''}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="mb-6">
-              <label htmlFor="dateObtained" className="block mb-2 font-medium text-gray-600">Date Obtained</label>
-              <input
-                type="date"
-                id="dateObtained"
-                name="dateObtained"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.dateObtained || ''}
-                onChange={handleInputChange}
-              />
-            </div>
+            <InputField label="Certification Name" name="certificationName" value={formData.certificationName} onChange={handleInputChange} />
+            <InputField label="Provider" name="provider" value={formData.provider} onChange={handleInputChange} />
+            <InputField label="Date Obtained" name="dateObtained" type="date" value={formData.dateObtained} onChange={handleInputChange} />
           </>
         );
       case 'Challenges/Competitions':
         return (
           <>
-            <div className="mb-6">
-              <label htmlFor="challengeName" className="block mb-2 font-medium text-gray-600">Challenge Name</label>
-              <input
-                type="text"
-                id="challengeName"
-                name="challengeName"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.challengeName || ''}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="mb-6">
-              <label htmlFor="result" className="block mb-2 font-medium text-gray-600">Result</label>
-              <input
-                type="text"
-                id="result"
-                name="result"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.result || ''}
-                onChange={handleInputChange}
-              />
-            </div>
+            <InputField label="Challenge Name" name="challengeName" value={formData.challengeName} onChange={handleInputChange} />
+            <InputField label="Result" name="result" value={formData.result} onChange={handleInputChange} />
           </>
         );
       case 'Workshops/Bootcamps':
         return (
           <>
-            <div className="mb-6">
-              <label htmlFor="workshopName" className="block mb-2 font-medium text-gray-600">Workshop Name</label>
-              <input
-                type="text"
-                id="workshopName"
-                name="workshopName"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.workshopName || ''}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="mb-6">
-              <label htmlFor="provider" className="block mb-2 font-medium text-gray-600">Provider</label>
-              <input
-                type="text"
-                id="provider"
-                name="provider"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.provider || ''}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="mb-6">
-              <label htmlFor="duration" className="block mb-2 font-medium text-gray-600">Duration</label>
-              <input
-                type="text"
-                id="duration"
-                name="duration"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.duration || ''}
-                onChange={handleInputChange}
-                placeholder="e.g. 4 weeks, 2 days"
-              />
-            </div>
+            <InputField label="Workshop Name" name="workshopName" value={formData.workshopName} onChange={handleInputChange} />
+            <InputField label="Provider" name="provider" value={formData.provider} onChange={handleInputChange} />
+            <InputField label="Duration" name="duration" value={formData.duration} onChange={handleInputChange} placeholder="e.g. 4 weeks, 2 days" />
           </>
         );
       default:
@@ -205,179 +106,142 @@ const AddProgress = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Add timestamp
-    const dataToSubmit = {
-      ...formData,
-      timestamp: new Date().toISOString(),
-    };
-
+  
+    const newErrors = {};
+    const requiredFields = ['topic', 'description', 'resourceLink', 'status', 'template', 'nextSteps', 'reflection'];
+    const urlFields = ['resourceLink', 'projectLink'];
+  
+    // Validate required fields
+    for (const field of requiredFields) {
+      if (!formData[field] || formData[field].trim() === '') {
+        newErrors[field] = 'This field is required.';
+      }
+    }
+  
+    // Validate URLs
+    urlFields.forEach((field) => {
+      if (formData[field] && !/^https?:\/\//i.test(formData[field])) {
+        newErrors[field] = 'URL must start with http:// or https://';
+      }
+    });
+  
+    // If there are any validation errors, show them and display alert
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setAlert({ type: 'error', message: 'Please fill all required fields correctly.' });
+      return;
+    }
+  
+    setErrors({});
+    const dataToSubmit = { ...formData, timestamp: new Date().toISOString() };
+  
     try {
       setLoading(true);
       await createProgress(dataToSubmit);
-      setAlert({
-        type: 'success',
-        message: 'Progress added successfully!'
-      });
-
-      // Reset form after successful submission
-      setTimeout(() => {
-        navigate('/achievements');
-      }, 2000);
+      setAlert({ type: 'success', message: 'Progress added successfully!' });
+      setTimeout(() => navigate('/projects/achievements'), 2000);
     } catch (error) {
-      setAlert({
-        type: 'error',
-        message: 'Failed to add progress. Please try again.'
-      });
+      setAlert({ type: 'error', message: 'Failed to add progress. Please try again.' });
       setLoading(false);
     }
   };
-
+  
   return (
-    <div className="py-8 px-4 max-w-7xl mx-auto">
+    <div className="py-8 px-4 max-w-8xl mx-auto bg-orange-100 min-h-screen">
       <div className="bg-white rounded-2xl shadow-md overflow-hidden max-w-3xl mx-auto">
-        <h1 className="text-center py-8 px-8 m2-0 text-4xl font-bold text-[#2b6cb0] bg-blue-50 bg-opacity-80 border-b border-gray-200 relative">
+        <h1 className="text-center py-8 px-8 m2-0 text-4xl font-bold text-black bg-orange-50 bg-opacity-80 border-b border-gray-200">
           Add Learning Progress
         </h1>
 
         {alert && (
           <div className="px-8 pt-6">
-            <Alert
-              message={alert.message}
-              type={alert.type}
-              onClose={() => setAlert(null)}
-            />
+            <Alert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="py-6 px-8 border-b border-gray-200">
-            <h2 className="text-2xl font-semibold mb-6 text-[#2b6cb0] flex items-center">
-              <span className="inline-block w-5 h-0.5 bg-blue-500 mr-2 rounded"></span>
-              Basic Information
-            </h2>
-
+          <Section title="Basic Information">
+            <InputField label="Topic" name="topic" value={formData.topic} onChange={handleInputChange} placeholder="What did you learn?" />
             <div className="mb-6">
-              <label htmlFor="topic" className="block mb-2 font-medium text-gray-600">Topic</label>
-              <input
-                type="text"
-                id="topic"
-                name="topic"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.topic}
-                onChange={handleInputChange}
-                placeholder="What did you learn?"
-                required
-              />
-            </div>
-
-            <div className="mb-6">
-              <label htmlFor="description" className="block mb-2 font-medium text-gray-600">Description</label>
+              <label htmlFor="description" className="block mb-2 font-medium text-black">Description</label>
               <textarea
                 id="description"
                 name="description"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white min-h-32 resize-y"
+                className={`w-full px-4 py-3 border ${errors['description'] ? 'border-red-500' : 'border-gray-200'} rounded-md focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all bg-white text-black min-h-32 resize-y`}
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Describe what you learned..."
-                required
               />
+              {errors['description'] && <p className="text-sm text-red-500 mt-2">{errors['description']}</p>}
             </div>
-
+            <InputField label="Resource Link" name="resourceLink" value={formData.resourceLink} onChange={handleInputChange} placeholder="Link to the resource you used" />
             <div className="mb-6">
-              <label htmlFor="resourceLink" className="block mb-2 font-medium text-gray-600">Resource Link</label>
-              <input
-                type="text"
-                id="resourceLink"
-                name="resourceLink"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
-                value={formData.resourceLink}
-                onChange={handleInputChange}
-                placeholder="Link to the resource you used"
-              />
-            </div>
-
-            <div className="mb-6">
-              <label htmlFor="status" className="block mb-2 font-medium text-gray-600">Status</label>
+              <label htmlFor="status" className="block mb-2 font-medium text-black">Status</label>
               <select
                 id="status"
                 name="status"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                className={`w-full px-4 py-3 border ${errors['status'] ? 'border-red-500' : 'border-gray-200'} rounded-md focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all bg-white text-black`}
                 value={formData.status}
                 onChange={handleInputChange}
-                required
               >
-                {statusOptions.map(option => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
+                {statusOptions.map(option => <option key={option} value={option}>{option}</option>)}
               </select>
+              {errors['status'] && <p className="text-sm text-red-500 mt-2">{errors['status']}</p>}
             </div>
-          </div>
+          </Section>
 
-          <div className="py-6 px-8 border-b border-gray-200">
-            <h2 className="text-2xl font-semibold mb-6 text-[#2b6cb0] flex items-center">
-              <span className="inline-block w-5 h-0.5 bg-blue-500 mr-2 rounded"></span>
-              Template Selection
-            </h2>
+          <Section title="Template Selection">
             <div className="mb-6">
-              <label htmlFor="template" className="block mb-2 font-medium text-gray-600">Achievement Type</label>
+              <label htmlFor="template" className="block mb-2 font-medium text-black">Achievement Type</label>
               <select
                 id="template"
                 name="template"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                className={`w-full px-4 py-3 border ${errors['template'] ? 'border-red-500' : 'border-gray-200'} rounded-md focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all bg-white text-black`}
                 value={formData.template}
                 onChange={handleInputChange}
-                required
               >
                 <option value="">Select achievement type</option>
-                {templateOptions.map(option => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
+                {templateOptions.map(option => <option key={option} value={option}>{option}</option>)}
               </select>
+              {errors['template'] && <p className="text-sm text-red-500 mt-2">{errors['template']}</p>}
             </div>
-
             {showTemplateFields && (
-              <div className="bg-blue-50 bg-opacity-50 rounded-md p-5 mt-4">
-                <h3 className="text-lg font-semibold mb-5 text-[#2b6cb0]">{formData.template} Details</h3>
+              <div className="bg-orange-50 bg-opacity-50 rounded-md p-5 mt-4">
+                <h3 className="text-lg font-semibold mb-5 text-black">{formData.template} Details</h3>
                 {renderTemplateFields()}
               </div>
             )}
-          </div>
+          </Section>
 
-          <div className="py-6 px-8 border-b border-gray-200">
-            <h2 className="text-2xl font-semibold mb-6 text-[#2b6cb0] flex items-center">
-              <span className="inline-block w-5 h-0.5 bg-blue-500 mr-2 rounded"></span>
-              Reflection
-            </h2>
+          <Section title="Reflection">
             <div className="mb-6">
-              <label htmlFor="nextSteps" className="block mb-2 font-medium text-gray-600">Next Steps</label>
+              <label htmlFor="nextSteps" className="block mb-2 font-medium text-black">Next Steps</label>
               <textarea
                 id="nextSteps"
                 name="nextSteps"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white min-h-32 resize-y"
+                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all bg-white text-black min-h-32 resize-y"
                 value={formData.nextSteps}
                 onChange={handleInputChange}
                 placeholder="What are your next steps?"
               />
             </div>
-
             <div className="mb-6">
-              <label htmlFor="reflection" className="block mb-2 font-medium text-gray-600">Reflection</label>
+              <label htmlFor="reflection" className="block mb-2 font-medium text-black">Reflection</label>
               <textarea
                 id="reflection"
                 name="reflection"
-                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white min-h-32 resize-y"
+                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all bg-white text-black min-h-32 resize-y"
                 value={formData.reflection}
                 onChange={handleInputChange}
                 placeholder="Reflect on your learning experience..."
               />
             </div>
-          </div>
+          </Section>
 
-          <div className="py-6 px-8 flex gap-4 justify-end bg-blue-50 bg-opacity-50">
+          <div className="py-6 px-8 flex gap-4 justify-end bg-orange-50 bg-opacity-50">
             <button
               type="button"
-              className="px-5 py-2.5 font-semibold rounded-md border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transform hover:-translate-y-0.5 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 font-semibold rounded-md bg-orange-500 hover:bg-orange-300 text-black transform hover:-translate-y-0.5 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => navigate(-1)}
               disabled={loading}
             >
@@ -385,12 +249,12 @@ const AddProgress = () => {
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 font-semibold rounded-md bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 font-semibold rounded-md bg-orange-500 hover:bg-orange-600 text-black shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
               {loading ? (
                 <div className="flex items-center gap-2">
-                  <span className="inline-block w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></span>
+                  <span className="inline-block w-5 h-5 border-2 border-black/50 border-t-black rounded-full animate-spin"></span>
                   <span>Saving...</span>
                 </div>
               ) : 'Save Progress'}
@@ -401,5 +265,15 @@ const AddProgress = () => {
     </div>
   );
 };
+
+const Section = ({ title, children }) => (
+  <div className="py-6 px-8 border-b border-gray-200">
+    <h2 className="text-2xl font-semibold mb-6 text-black flex items-center">
+      <span className="inline-block w-5 h-0.5 bg-orange-500 mr-2 rounded"></span>
+      {title}
+    </h2>
+    {children}
+  </div>
+);
 
 export default AddProgress;
