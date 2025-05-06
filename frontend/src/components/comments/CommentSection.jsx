@@ -63,6 +63,7 @@ const handleReply = async (parentCommentId, content) => {
     };
     const newReply = await commentService.replyToComment(parentCommentId, replyDTO);
 
+
     // Update the comment tree with the new reply
     setComments(prev => 
       prev.map(comment => {
