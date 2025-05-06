@@ -24,9 +24,32 @@ const EditModal = ({ progress, onClose, onSave }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
+    const requiredFields = ['topic', 'description', 'resourceLink', 'status', 'template', 'nextSteps', 'reflection'];
+    const urlFields = ['resourceLink', 'projectLink'];
+    let validationFailed = false;
+  
+    for (const field of requiredFields) {
+      if (!formData[field] || formData[field].trim() === '') {
+        setError(`Please fill the "${field}" field.`);
+        validationFailed = true;
+        return;
+      }
+    }
+  
+    for (const field of urlFields) {
+      if (formData[field] && !/^https?:\/\//i.test(formData[field])) {
+        setError(`The "${field}" must start with http:// or https://`);
+        validationFailed = true;
+        return;
+      }
+    }
+  
+    if (validationFailed) return;
+  
     setLoading(true);
     setError(null);
-
+  
     try {
       await updateProgress(progress.id, formData);
       onSave();
@@ -35,7 +58,7 @@ const EditModal = ({ progress, onClose, onSave }) => {
       setLoading(false);
     }
   };
-
+  
   const renderTemplateFields = () => {
     switch (formData.template) {
       case 'Completed Project/Task':
@@ -177,7 +200,7 @@ const EditModal = ({ progress, onClose, onSave }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
       <div className="bg-white rounded-lg w-11/12 max-w-xl max-h-[90vh] overflow-y-auto shadow-xl animate-slideIn">
         <div className="flex justify-between items-center px-6 py-5 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-blue-800">Edit Progress</h2>
+          <h2 className="text-xl font-semibold text-black-800">Edit Progress</h2>
           <button className="text-2xl text-gray-500 hover:text-gray-700 focus:outline-none" onClick={onClose}>&times;</button>
         </div>
 
@@ -280,7 +303,7 @@ const EditModal = ({ progress, onClose, onSave }) => {
           <div className="flex justify-end items-center gap-4 pt-4 border-t border-gray-200">
             <button
               type="button"
-              className="px-4 py-2 border border-blue-500 text-blue-500 font-medium rounded hover:bg-blue-50 transition-colors"
+              className="px-4 py-2 bg-orange-500 hover:bg-orange-500 text-black font-medium rounded transition-colors"
               onClick={onClose}
               disabled={loading}
             >
@@ -288,12 +311,12 @@ const EditModal = ({ progress, onClose, onSave }) => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white font-medium rounded hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+              className="px-4 py-2 bg-orange-500 text-black font-medium rounded hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-orange border-t-transparent rounded-full animate-spin"></div>
                   <span>Updating...</span>
                 </>
               ) : 'Update'}
