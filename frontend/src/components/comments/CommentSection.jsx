@@ -83,17 +83,17 @@ const handleReply = async (parentCommentId, content) => {
 // ...existing code...
 
 
+// Correct usage in CommentSection.jsx
 const handleEdit = async (commentId, content) => {
   try {
-    const updatedComment = await commentService.editComment(commentId, {
-      content,
-      postId, // <-- add postId as required by backend
-    });
+    const commentDTO = { content }; // Add other fields if needed
+    const updatedComment = await commentService.editComment(commentId, commentDTO);
     setComments(prev => updateCommentInTree(prev, updatedComment));
   } catch (err) {
     setError('Failed to edit comment');
   }
 };
+
 // ...existing code...
 
   const handleDelete = async (commentId) => {
