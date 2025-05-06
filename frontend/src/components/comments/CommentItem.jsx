@@ -12,14 +12,10 @@ const CommentItem = ({ comment, onReply, onEdit, onDelete }) => {
     setIsReplying(false);
   };
 
- // ...existing code...
-// ...existing code...
-const handleEdit = (content) => {
-  onEdit(comment.id, content);
-  setIsEditing(false);
-};
-// ...existing code...
-// ...existing code...
+  const handleEdit = (content) => {
+    onEdit(comment.id, content);
+    setIsEditing(false);
+  };
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this comment?')) {
@@ -73,20 +69,20 @@ const handleEdit = (content) => {
 
         {/* Comment content */}
         {isEditing ? (
-  <CommentForm
-    initialValue={comment.content}
-    onSubmit={handleEdit}
-    onCancel={() => setIsEditing(false)}
-  />
-) : (
-  <div className="text-gray-800 whitespace-pre-wrap">
-    {comment.deleted ? (
-      <em className="text-gray-500">This comment has been deleted</em>
-    ) : (
-      comment.content
-    )}
-  </div>
-)}
+          <CommentForm
+            initialValue={comment.content}
+            onSubmit={handleEdit}
+            onCancel={() => setIsEditing(false)}
+          />
+        ) : (
+          <div className="text-gray-800 whitespace-pre-wrap">
+            {comment.deleted ? (
+              <em className="text-gray-500">This comment has been deleted</em>
+            ) : (
+              comment.content
+            )}
+          </div>
+        )}
 
         {/* Reply form */}
         {isReplying && (
