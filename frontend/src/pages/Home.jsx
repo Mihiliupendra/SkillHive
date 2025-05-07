@@ -131,15 +131,36 @@ function Home() {
             </motion.div>
           </div>
 
-          {/* Main Content */}
+          {/* Main Content - Scrollable Post Feed */}
           <div className="lg:col-span-2">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
+              className="h-[calc(100vh-3rem)] overflow-y-auto pr-2 scrollbar-container"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#F7931E #f8f9fa',
+              }}
             >
-              {/* Main content area - you can add new content here */}
-              <PostFeed/>
+              <style jsx global>{`
+                .scrollbar-container::-webkit-scrollbar {
+                  width: 6px;
+                }
+                .scrollbar-container::-webkit-scrollbar-track {
+                  background: #f8f9fa;
+                  border-radius: 10px;
+                }
+                .scrollbar-container::-webkit-scrollbar-thumb {
+                  background-color: #F7931E;
+                  border-radius: 10px;
+                }
+                .scrollbar-container {
+                  scrollbar-width: thin;
+                  scrollbar-color: #F7931E #f8f9fa;
+                }
+              `}</style>
+              <PostFeed />
             </motion.div>
           </div>
 
