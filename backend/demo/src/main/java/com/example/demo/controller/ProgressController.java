@@ -1,6 +1,5 @@
 package com.example.demo.controller;
 
-
 import com.example.demo.dto.ProgressDTO;
 import com.example.demo.exception.ProgressNotFoundException;
 import com.example.demo.model.Progress;
@@ -30,9 +29,9 @@ public class ProgressController {
         return new ResponseEntity<>(responseMessage, HttpStatus.CREATED);
     }
 
-
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseMessage> updateProgress(@PathVariable String id, @RequestBody ProgressDTO progressDTO) {
+    public ResponseEntity<ResponseMessage> updateProgress(@PathVariable String id,
+            @RequestBody ProgressDTO progressDTO) {
         // Check if the progress with given ID exists; throw 404 if not found
         progressService.getProgressById(id).orElseThrow(() -> new ProgressNotFoundException(id));
 
@@ -40,10 +39,10 @@ public class ProgressController {
         progressService.updateProgress(id, progressDTO);
 
         // Return a success message with HTTP 200 (OK)
-        ResponseMessage responseMessage = new ResponseMessage("Progress with ID: " + id + " successfully updated.", HttpStatus.OK);
+        ResponseMessage responseMessage = new ResponseMessage("Progress with ID: " + id + " successfully updated.",
+                HttpStatus.OK);
         return new ResponseEntity<>(responseMessage, HttpStatus.OK);
     }
-
 
     @GetMapping("/getAll")
     public ResponseEntity<List<Progress>> getAllProgress() {
@@ -54,7 +53,6 @@ public class ProgressController {
         return new ResponseEntity<>(progressList, HttpStatus.OK);
     }
 
-
     @GetMapping("/{id}")
     public ResponseEntity<Progress> getProgressById(@PathVariable String id) {
         // Try to fetch progress by ID, throw 404 if not found
@@ -62,9 +60,8 @@ public class ProgressController {
                 .orElseThrow(() -> new ProgressNotFoundException(id));
 
         // Return the progress object with HTTP 200 (OK)
-        return new ResponseEntity<>(progress, HSttpStatus.OK);
+        return new ResponseEntity<>(progress, HttpStatus.OK);
     }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseMessage> deleteProgress(@PathVariable String id) {
@@ -75,7 +72,8 @@ public class ProgressController {
         progressService.deleteProgress(id);
 
         // Return a success message with HTTP 204 (No Content)
-        ResponseMessage responseMessage = new ResponseMessage("Progress with ID: " + id + " successfully deleted.", HttpStatus.NO_CONTENT);
+        ResponseMessage responseMessage = new ResponseMessage("Progress with ID: " + id + " successfully deleted.",
+                HttpStatus.NO_CONTENT);
         return new ResponseEntity<>(responseMessage, HttpStatus.NO_CONTENT);
     }
 }
