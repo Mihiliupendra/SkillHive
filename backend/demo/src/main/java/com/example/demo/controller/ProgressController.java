@@ -62,7 +62,7 @@ public class ProgressController {
                 .orElseThrow(() -> new ProgressNotFoundException(id));
 
         // Return the progress object with HTTP 200 (OK)
-        return new ResponseEntity<>(progress, HSttpStatus.OK);
+        return new ResponseEntity<>(progress, HttpStatus.OK);
     }
 
 
