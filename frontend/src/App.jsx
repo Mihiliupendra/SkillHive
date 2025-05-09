@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme/theme';
@@ -7,7 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './components/profile/Profile';
-
+import Footer from './components/Footer';
 
 
 import Home from './pages/Home';
@@ -26,13 +26,14 @@ import NotificationsPage from './pages/NotificationsPage';
 import websocketService from './services/websocketService';
 
 
+function AppContent() {
+  const location = useLocation();
+  const hideFooterPaths = ['/signin', '/signup'];
+  const shouldShowFooter = !hideFooterPaths.includes(location.pathname);
 
-
-function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div className="flex-grow">
         <Routes>
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
@@ -148,6 +149,16 @@ function App() {
           />
         </Routes>
       </div>
+      {shouldShowFooter && <Footer />}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AppContent />
     </ThemeProvider>
   );
 }
