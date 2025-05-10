@@ -15,6 +15,7 @@ import com.example.demo.service.ImageUploadService;
 import com.example.demo.exception.BadRequestException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.dto.ProfileCompletionDto;
+import com.example.demo.security.UserPrincipal;
 import org.springframework.security.core.Authentication;
 
 import jakarta.validation.Valid;
@@ -46,21 +47,37 @@ public class UserController {
                     .badRequest()
                     .body(new MessageResponse("Error: " + e.getMessage()));
         }
-    }
-
-    @PutMapping("/{userId}/profile")
-    public ResponseEntity<UserProfileDTO> updateProfile(@PathVariable String userId, @RequestBody User updatedUser) {
+    }    @PutMapping("/{userId}/profile")
+    public ResponseEntity<UserProfileDTO> updateProfile(
+            @PathVariable String userId, 
+            @RequestBody User updatedUser, 
+            Authentication authentication) {
+        
+        // Verify that the authenticated user is updating their own profile
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            if (!userId.equals(userPrincipal.getId())) {
+                return ResponseEntity.status(403).build(); // Forbidden if not the same user
+            }
+        }
+        
         User user = userService.updateProfile(userId, updatedUser);
-        // Get the authenticated user's ID (for now using the same userId)
         User currentUser = userService.getUserProfile(userId);
         return ResponseEntity.ok(UserProfileDTO.fromUserWithRelation(user, currentUser, followRepository, friendshipRepository));
-    }
-
-    @GetMapping("/{userId}/profile")
-    public ResponseEntity<UserProfileDTO> getUserProfile(@PathVariable String userId) {
+    }@GetMapping("/{userId}/profile")
+    public ResponseEntity<UserProfileDTO> getUserProfile(@PathVariable String userId, Authentication authentication) {
         User user = userService.getUserProfile(userId);
-        // Get the authenticated user's ID (for now using the same userId)
-        User currentUser = userService.getUserProfile(userId);
+        
+        // Get the authenticated user from the security context
+        User currentUser;
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            currentUser = userService.getUserProfile(userPrincipal.getId());
+        } else {
+            // Fallback to requested user if not authenticated (for public profiles)
+            currentUser = user;
+        }
+        
         return ResponseEntity.ok(UserProfileDTO.fromUserWithRelation(user, currentUser, followRepository, friendshipRepository));
     }
 

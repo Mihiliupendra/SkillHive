@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Community;
+import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.CommunityService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -61,13 +63,25 @@ public class CommunityController {
         return communityService.getCommunityById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    public ResponseEntity<Community> createCommunity(@Valid @RequestBody Community community) {
-        if (community.getId() != null) {
+    }    @PostMapping
+    public ResponseEntity<Community> createCommunity(
+            @Valid @RequestBody Community community,
+            Authentication authentication) {        if (community.getId() != null) {
             return ResponseEntity.badRequest().build();
         }
+        
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        
+        // Set the creator as the current authenticated user
+        if (!community.getAdminIds().contains(userPrincipal.getId())) {
+            community.getAdminIds().add(userPrincipal.getId());
+        }
+        
+        // Add creator to members if not already included
+        if (!community.getMemberIds().contains(userPrincipal.getId())) {
+            community.getMemberIds().add(userPrincipal.getId());
+        }
+        
         Community created = communityService.createCommunity(community);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -93,17 +107,57 @@ public class CommunityController {
     @GetMapping("/{communityId}/members")
     public ResponseEntity<List<String>> getCommunityMembers(@PathVariable String communityId) {
         return ResponseEntity.ok(communityService.getCommunityMembers(communityId));
+    }    @PostMapping("/{communityId}/members/me")
+    public ResponseEntity<Void> addSelfAsMember(
+            @PathVariable String communityId, 
+            Authentication authentication) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        return communityService.addMember(communityId, userPrincipal.getId())
+                ? ResponseEntity.status(HttpStatus.CREATED).build()
+                : ResponseEntity.notFound().build();
     }
-
+    
     @PostMapping("/{communityId}/members/{userId}")
-    public ResponseEntity<Void> addMember(@PathVariable String communityId, @PathVariable String userId) {
+    public ResponseEntity<Void> addMember(
+            @PathVariable String communityId, 
+            @PathVariable String userId,
+            Authentication authentication) {
+        // Only admins can add other members
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        String currentUserId = userPrincipal.getId();
+        
+        // Check if current user is an admin
+        if (!communityService.isAdmin(communityId, currentUserId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         return communityService.addMember(communityId, userId)
                 ? ResponseEntity.status(HttpStatus.CREATED).build()
+                : ResponseEntity.notFound().build();
+    }    @DeleteMapping("/{communityId}/members/me")
+    public ResponseEntity<Void> removeSelfFromCommunity(
+            @PathVariable String communityId,
+            Authentication authentication) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        return communityService.removeMember(communityId, userPrincipal.getId())
+                ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{communityId}/members/{userId}")
-    public ResponseEntity<Void> removeMember(@PathVariable String communityId, @PathVariable String userId) {
+    public ResponseEntity<Void> removeMember(
+            @PathVariable String communityId, 
+            @PathVariable String userId,
+            Authentication authentication) {
+        // Only admins can remove members or users can remove themselves
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        String currentUserId = userPrincipal.getId();
+        
+        // Allow if current user is the one being removed or is an admin
+        if (!currentUserId.equals(userId) && !communityService.isAdmin(communityId, currentUserId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         return communityService.removeMember(communityId, userId)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
@@ -112,17 +166,45 @@ public class CommunityController {
     @GetMapping("/{communityId}/admins")
     public ResponseEntity<List<String>> getCommunityAdmins(@PathVariable String communityId) {
         return ResponseEntity.ok(communityService.getCommunityAdmins(communityId));
-    }
-
-    @PostMapping("/{communityId}/admins/{userId}")
-    public ResponseEntity<Void> addAdmin(@PathVariable String communityId, @PathVariable String userId) {
+    }    @PostMapping("/{communityId}/admins/{userId}")
+    public ResponseEntity<Void> addAdmin(
+            @PathVariable String communityId, 
+            @PathVariable String userId,
+            Authentication authentication) {
+        // Only existing admins can add new admins
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        String currentUserId = userPrincipal.getId();
+        
+        // Check if current user is an admin
+        if (!communityService.isAdmin(communityId, currentUserId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         return communityService.addAdmin(communityId, userId)
                 ? ResponseEntity.status(HttpStatus.CREATED).build()
                 : ResponseEntity.notFound().build();
-    }
-
-    @DeleteMapping("/{communityId}/admins/{userId}")
-    public ResponseEntity<Void> removeAdmin(@PathVariable String communityId, @PathVariable String userId) {
+    }    @DeleteMapping("/{communityId}/admins/{userId}")
+    public ResponseEntity<Void> removeAdmin(
+            @PathVariable String communityId, 
+            @PathVariable String userId,
+            Authentication authentication) {
+        // Only existing admins can remove admins (and cannot remove themselves if they're the last admin)
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        String currentUserId = userPrincipal.getId();
+        
+        // Check if current user is an admin
+        if (!communityService.isAdmin(communityId, currentUserId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
+        // Get all admins to ensure we're not removing the last admin
+        List<String> admins = communityService.getCommunityAdmins(communityId);
+        if (admins.size() <= 1 && admins.contains(userId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .header("X-Error-Message", "Cannot remove the last admin of a community")
+                    .build();
+        }
+        
         return communityService.removeAdmin(communityId, userId)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();

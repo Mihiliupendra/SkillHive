@@ -203,4 +203,22 @@ public class CommunityServiceImpl implements CommunityService {
         Optional<Community> communityOpt = communityRepository.findById(communityId);
         return communityOpt.map(community -> new ArrayList<>(community.getAdminIds())).orElse(new ArrayList<>());
     }
+    
+    @Override
+    public boolean isAdmin(String communityId, String userId) {
+        Optional<Community> community = communityRepository.findById(communityId);
+        if (community.isPresent()) {
+            return community.get().getAdminIds().contains(userId);
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean isMember(String communityId, String userId) {
+        Optional<Community> community = communityRepository.findById(communityId);
+        if (community.isPresent()) {
+            return community.get().getMemberIds().contains(userId);
+        }
+        return false;
+    }
 }
