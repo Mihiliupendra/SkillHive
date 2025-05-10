@@ -25,6 +25,8 @@ import NotificationIcon from './components/notifications/NotificationIcon';
 import NotificationsPage from './pages/NotificationsPage';
 import websocketService from './services/websocketService';
 import ProjectsLayout from './pages/ProjectsLayout';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 
 
 function AppContent() {
@@ -157,10 +159,13 @@ function AppContent() {
 
 function App() {
   return (
+     <GoogleOAuthProvider clientId="497490250211-mkjjosm2b8dq9cin3lt72rth09kpmtep.apps.googleusercontent.com">
+
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AppContent />
     </ThemeProvider>
+    </GoogleOAuthProvider>
   );
 }
 
