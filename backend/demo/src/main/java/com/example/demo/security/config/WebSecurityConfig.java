@@ -17,6 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -48,7 +51,7 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
+   @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configure(http))
@@ -65,6 +68,10 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/communities/**").permitAll()
                     .requestMatchers("/api/progress/**").permitAll()
                     .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> 
+                oauth2
+                    .defaultSuccessUrl("/oauth2/success", true)
             );
 
         http.authenticationProvider(authenticationProvider());
@@ -72,4 +79,4 @@ public class WebSecurityConfig {
 
         return http.build();
     }
-} 
+}

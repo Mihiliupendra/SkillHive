@@ -23,6 +23,7 @@ import {
   GitHub,
   Facebook
 } from '@mui/icons-material';
+import { GoogleLogin } from '@react-oauth/google';
 
 function SignIn() {
   const [formData, setFormData] = useState({
@@ -78,13 +79,19 @@ function SignIn() {
     });
   };
 
-  const handleSocialSignIn = (provider) => {
-    setSocialLoading(provider);
-    // Implement social sign-in logic here
-    console.log(`${provider} Sign In clicked`);
-    setTimeout(() => {
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setSocialLoading('google');
+    try {
+      const response = await api.post('/api/auth/google', {
+        token: credentialResponse.credential,
+      });
+      await login(response.data);
+      navigate('/home');
+    } catch (err) {
+      setError('Google sign-in failed');
+    } finally {
       setSocialLoading(null);
-    }, 2000);
+    }
   };
 
   return (
@@ -118,14 +125,6 @@ function SignIn() {
             >
               SKILL HIVE
             </motion.h1>
-            {/* <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-              className="text-gray-600"
-            >
-              Sign in to continue your skill development journey
-            </motion.p> */}
           </div>
 
           {/* Error Message */}
@@ -269,35 +268,15 @@ function SignIn() {
             transition={{ duration: 0.3, delay: 1 }}
             className="grid"
           >
-            <Button
-              variant="outlined"
-              onClick={() => handleSocialSignIn('google')}
-              disabled={socialLoading === 'google'}
-              className="py-2 rounded-lg border-gray-300 hover:border-[#002B5B]"
-              startIcon={socialLoading === 'google' ? <CircularProgress size={20} /> : <Google />}
-            >
-              {socialLoading === 'google' ? '' : 'Google'}
-            </Button>
-
-            {/* <Button
-              variant="outlined"
-              onClick={() => handleSocialSignIn('facebook')}
-              disabled={socialLoading === 'facebook'}
-              className="py-2 rounded-lg border-gray-300 hover:border-[#002B5B]"
-              startIcon={socialLoading === 'facebook' ? <CircularProgress size={20} /> : <Facebook />}
-            >
-              {socialLoading === 'facebook' ? '' : 'Facebook'}
-            </Button>
-
-            <Button
-              variant="outlined"
-              onClick={() => handleSocialSignIn('github')}
-              disabled={socialLoading === 'github'}
-              className="py-2 rounded-lg border-gray-300 hover:border-[#002B5B]"
-              startIcon={socialLoading === 'github' ? <CircularProgress size={20} /> : <GitHub />}
-            >
-              {socialLoading === 'github' ? '' : 'GitHub'}
-            </Button> */}
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google sign-in failed')}
+              width="100%"
+              shape="pill"
+              theme="outline"
+              text="signin_with"
+              useOneTap
+            />
           </motion.div>
 
           {/* Sign Up Link */}

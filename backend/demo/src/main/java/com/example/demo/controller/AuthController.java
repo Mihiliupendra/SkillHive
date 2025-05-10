@@ -18,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.model.User;
@@ -63,6 +64,15 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(new MessageResponse("You've been signed out!"));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
+        String token = body.get("token");
+        // 1. Verify token with Google API
+        // 2. Register or login user, generate JWT/session
+        // 3. Return user info and token
+        return ResponseEntity.ok().body("Google login endpoint hit");
     }
 
     @PostMapping("/register")
