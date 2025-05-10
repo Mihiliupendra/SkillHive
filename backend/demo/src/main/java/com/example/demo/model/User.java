@@ -44,10 +44,10 @@ public class User {
     private String password;
 
     @Size(max = 50)
-    private String firstName;
-
-    @Size(max = 50)
+    private String firstName;    @Size(max = 50)
     private String lastName;
+    
+    private boolean enabled = true;
 
     private String biography;
 

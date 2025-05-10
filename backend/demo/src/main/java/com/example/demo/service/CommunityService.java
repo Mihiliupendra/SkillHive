@@ -54,4 +54,8 @@ public interface CommunityService {
     List<String> getCommunityMembers(String communityId);
     
     List<String> getCommunityAdmins(String communityId);
+    
+    boolean isAdmin(String communityId, String userId);
+    
+    boolean isMember(String communityId, String userId);
 }

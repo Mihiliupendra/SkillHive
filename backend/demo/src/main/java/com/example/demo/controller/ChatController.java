@@ -11,6 +11,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -38,21 +39,31 @@ public class ChatController {
         List<ChatMessage> recentMessages = chatService.getRecentCommunityMessages(communityId);
         return ResponseEntity.ok(recentMessages);
     }
-    
-    // REST endpoint to send a message
+      // REST endpoint to send a message
     @PostMapping("/community/{communityId}")
     public ResponseEntity<ChatMessage> sendMessage(
             @PathVariable String communityId,
-            @RequestBody ChatMessage message) {
+            @RequestBody ChatMessage message, 
+            Principal principal) {
         
         message.setCommunityId(communityId);
+        
+        // Set sender ID from authenticated principal if not provided
+        if (principal != null && message.getSenderId() == null) {
+            message.setSenderId(principal.getName());
+        }
+        
         ChatMessage savedMessage = chatService.saveMessage(message);
         return ResponseEntity.ok(savedMessage);
     }
     
     // WebSocket endpoint to handle chat messages
     @MessageMapping("/chat.sendMessage")
-    public void processMessage(@Payload ChatMessage chatMessage) {
+    public void processMessage(@Payload ChatMessage chatMessage, Principal principal) {
+        // Set sender ID from authenticated principal
+        if (principal != null && chatMessage.getSenderId() == null) {
+            chatMessage.setSenderId(principal.getName());
+        }
         chatService.saveMessage(chatMessage);
     }
 }
