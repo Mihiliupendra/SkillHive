@@ -47,19 +47,48 @@ function SignIn() {
     }
 
     setLoading(true);
-    
-    try {
+      try {
+      console.log('Attempting login with:', { username: formData.username });
+      
       const response = await api.post('/api/auth/login', {
         username: formData.username,
         password: formData.password
       });
+        console.log('Login response received:', response.status);
       
       if (response.data) {
+        console.log('Login successful, data received:', 
+          { 
+            ...response.data, 
+            token: response.data.token ? '✓ Present' : '✗ Missing',
+            accessToken: response.data.accessToken ? '✓ Present' : '✗ Missing',
+            refreshToken: response.data.refreshToken ? '✓ Present' : '✗ Missing'
+          });
+          
         await login(response.data);
         navigate('/home');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred during sign in');
+      console.error('Login error:', err);
+      
+      if (err.response) {
+        console.error('Response error data:', err.response.data);
+        console.error('Response status:', err.response.status);
+        
+        if (err.response.status === 401) {
+          setError('Invalid username or password');
+        } else if (err.response.status === 403) {
+          setError('Account access forbidden. Please contact support.');
+        } else {
+          setError(err.response?.data?.message || 'Server error. Please try again later.');
+        }
+      } else if (err.request) {
+        console.error('Request was made but no response received');
+        setError('Cannot connect to the server. Please check your internet connection.');
+      } else {
+        console.error('Error setting up request:', err.message);
+        setError('An error occurred during sign in. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -78,17 +107,38 @@ function SignIn() {
       showPassword: !formData.showPassword
     });
   };
-
   const handleGoogleSuccess = async (credentialResponse) => {
     setSocialLoading('google');
     try {
+      console.log('Google login attempt with credential response:', { 
+        credential: credentialResponse.credential ? 'Received' : 'Missing'
+      });
+      
       const response = await api.post('/api/auth/google', {
         token: credentialResponse.credential,
       });
+      
+      console.log('Google login response received:', {
+        status: response.status,
+        tokenPresent: response.data?.token ? 'Yes' : 'No',
+        accessTokenPresent: response.data?.accessToken ? 'Yes' : 'No'
+      });
+      
       await login(response.data);
       navigate('/home');
     } catch (err) {
-      setError('Google sign-in failed');
+      console.error('Google sign-in error:', err);
+      
+      if (err.response) {
+        console.error('Error response:', err.response.status, err.response.data);
+        setError(`Google sign-in failed: ${err.response.data?.message || err.response.statusText}`);
+      } else if (err.request) {
+        console.error('No response received');
+        setError('Server not responding. Please try again later.');
+      } else {
+        console.error('Error:', err.message);
+        setError(`Google sign-in error: ${err.message}`);
+      }
     } finally {
       setSocialLoading(null);
     }

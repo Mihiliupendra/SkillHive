@@ -28,7 +28,6 @@ import ProjectsLayout from './pages/ProjectsLayout';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 
-
 function AppContent() {
   const location = useLocation();
   const hideFooterPaths = ['/signin', '/signup'];
@@ -158,13 +157,16 @@ function AppContent() {
 }
 
 function App() {
+  // This is a placeholder. Replace with your new client ID from Google Cloud Console.
+  // The client ID should match the one in your backend application.properties
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_NEW_CLIENT_ID_HERE.apps.googleusercontent.com";
+  
   return (
-     <GoogleOAuthProvider clientId="497490250211-mkjjosm2b8dq9cin3lt72rth09kpmtep.apps.googleusercontent.com">
-
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AppContent />
-    </ThemeProvider>
+     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AppContent />
+      </ThemeProvider>
     </GoogleOAuthProvider>
   );
 }

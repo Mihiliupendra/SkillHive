@@ -11,23 +11,21 @@ class WebSocketService {
     this.onConnectCallbacks = [];
     this.connectionAttempts = 0;
     this.maxConnectionAttempts = 3;
-  }
-
-  connect() {
+  }  connect() {
     if (this.stompClient) {
       return;
     }
 
-    // Get current user ID and token from local storage
+    // Get current user ID and tokens from local storage
     const userData = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    const refreshToken = localStorage.getItem('refreshToken');
     let userId = '';
-    let token = '';
     
     if (userData) {
       try {
         const user = JSON.parse(userData);
         userId = user.id || '';
-        token = user.token || ''; // Get auth token if available
       } catch (e) {
         console.error('Error parsing user data', e);
       }
@@ -38,21 +36,38 @@ class WebSocketService {
       return;
     }
 
+    // Prepare headers for connection
+    const headers = {
+      'X-User-Id': userId
+    };
+    
+    // Add Authorization header with Bearer token if token exists
+    if (token) {
+      // Make sure token has proper format
+      if (!token.startsWith('Bearer ')) {
+        headers['Authorization'] = `Bearer ${token}`;
+      } else {
+        headers['Authorization'] = token;
+      }
+    }
+    
+    // Add refresh token as a custom header
+    if (refreshToken) {
+      headers['X-Refresh-Token'] = refreshToken;
+    }
+
     // Use the API_BASE_URL (which is http/https) for SockJS instead of WS_BASE_URL
     // SockJS doesn't support the ws:// protocol directly, it wraps WebSockets
-    const socketUrl = `${API_BASE_URL}/ws${token ? `?token=${token}` : ''}`;
+    const socketUrl = `${API_BASE_URL}/ws`;
     console.log('Connecting to WebSocket at:', socketUrl);
     
-    // Create socket with token in query parameter to avoid CORS preflight
+    // Create socket
     const socket = new SockJS(socketUrl);
     
     // Create connection with authentication headers
     this.stompClient = new Client({
       webSocketFactory: () => socket,
-      connectHeaders: {
-        'X-User-Id': userId,
-        'Authorization': token ? `Bearer ${token}` : '' // Add Authorization header
-      },
+      connectHeaders: headers,
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -96,13 +111,22 @@ class WebSocketService {
       console.error(`Failed to connect after ${this.maxConnectionAttempts} attempts`);
     }
   }
-
   disconnect() {
-    if (this.stompClient) {
-      this.stompClient.deactivate();
-      this.stompClient = null;
-      this.connected = false;
-      this.subscriptions.clear();
+    if (this.stompClient && this.connected) {
+      console.log('Disconnecting from WebSocket');
+      
+      try {
+        this.stompClient.deactivate();
+        console.log('WebSocket disconnected successfully');
+      } catch (error) {
+        console.error('Error disconnecting from WebSocket:', error);
+      } finally {
+        this.stompClient = null;
+        this.connected = false;
+        this.subscriptions.clear();
+      }
+    } else {
+      console.log('WebSocket already disconnected or not connected');
     }
   }
 

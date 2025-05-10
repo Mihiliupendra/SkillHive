@@ -24,8 +24,14 @@ public class JwtUtils {
     @Value("${skillhive.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
+    @Value("${skillhive.app.refreshJwtExpirationMs:604800000}") // Default 7 days
+    private int refreshJwtExpirationMs;
+
     @Value("${skillhive.app.jwtCookieName}")
     private String jwtCookie;
+
+    @Value("${skillhive.app.refreshJwtCookieName:refreshToken}")
+    private String refreshJwtCookie;
 
     public String getJwtFromCookies(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, jwtCookie);
@@ -102,4 +108,39 @@ public class JwtUtils {
                 .signWith(key())
                 .compact();
     }
-} 
+
+    public String getRefreshJwtFromCookies(HttpServletRequest request) {
+        Cookie cookie = WebUtils.getCookie(request, refreshJwtCookie);
+        if (cookie != null) {
+            return cookie.getValue();
+        } else {
+            return null;
+        }
+    }
+
+    public ResponseCookie generateRefreshJwtCookie(String userId, String username) {
+        String jwt = generateRefreshTokenFromUsername(userId, username);
+        return ResponseCookie.from(refreshJwtCookie, jwt)
+                .path("/api")
+                .maxAge(7 * 24 * 60 * 60) // 7 days
+                .httpOnly(true)
+                .build();
+    }
+
+    public ResponseCookie getCleanRefreshJwtCookie() {
+        return ResponseCookie.from(refreshJwtCookie, "")
+                .path("/api")
+                .build();
+    }
+
+    public String generateRefreshTokenFromUsername(String userId, String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("userId", userId)
+                .claim("tokenType", "refresh")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + refreshJwtExpirationMs))
+                .signWith(key())
+                .compact();
+    }
+}
