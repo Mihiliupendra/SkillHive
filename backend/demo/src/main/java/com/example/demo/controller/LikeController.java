@@ -4,6 +4,8 @@ package com.example.demo.controller;
 import com.example.demo.dto.LikeDTO;
 import com.example.demo.service.LikeService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,18 +38,25 @@ public class LikeController {
     public ResponseEntity<Map<String, Boolean>> checkLikeStatus(
             @PathVariable String postId) {
         boolean hasLiked = likeService.hasUserLiked(postId);
-        return ResponseEntity.ok(Map.of("liked", hasLiked));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(30, java.util.concurrent.TimeUnit.SECONDS))
+                .body(Map.of("liked", hasLiked));
     }
+
 
     @GetMapping("/{postId}")
     public ResponseEntity<List<LikeDTO>> getPostLikes(@PathVariable String postId) {
         List<LikeDTO> likes = likeService.getPostLikes(postId);
-        return ResponseEntity.ok(likes);
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(60, java.util.concurrent.TimeUnit.SECONDS))
+                .body(likes);
     }
 
     @GetMapping("/count/{postId}")
     public ResponseEntity<Long> getLikeCount(@PathVariable String postId) {
         long count = likeService.getLikeCount(postId);
-        return ResponseEntity.ok(count);
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(60, java.util.concurrent.TimeUnit.SECONDS))
+                .body(count);
     }
 }

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,12 +56,14 @@ public class CommentController {
             @PathVariable String postId,
             @PageableDefault(size = 10) Pageable pageable) {
         Page<CommentDTO> comments = commentService.getPostComments(postId, pageable);
-        return ResponseEntity.ok(comments);
+        return ResponseEntity.ok().cacheControl(CacheControl.maxAge(60, java.util.concurrent.TimeUnit.SECONDS))
+                .body(comments);
     }
 
     @GetMapping("/count/{postId}")
     public ResponseEntity<Long> getCommentCount(@PathVariable String postId) {
         long count = commentService.getCommentCount(postId);
-        return ResponseEntity.ok(count);
+        return ResponseEntity.ok().cacheControl(CacheControl.maxAge(60, java.util.concurrent.TimeUnit.SECONDS))
+                .body(count);
     }
 }

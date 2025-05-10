@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.CacheControl;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,13 +25,17 @@ public class NotificationController {
     public ResponseEntity<Page<NotificationDTO>> getUserNotifications(
             @PageableDefault(size = 20) Pageable pageable) {
         Page<NotificationDTO> notifications = notificationService.getUserNotifications(pageable);
-        return ResponseEntity.ok(notifications);
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(60, java.util.concurrent.TimeUnit.SECONDS))
+                .body(notifications);
     }
 
     @GetMapping("/unread")
     public ResponseEntity<List<NotificationDTO>> getUnreadNotifications() {
         List<NotificationDTO> notifications = notificationService.getUnreadNotifications();
-        return ResponseEntity.ok(notifications);
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(60, java.util.concurrent.TimeUnit.SECONDS))
+                .body(notifications);
     }
 
     @PutMapping("/{notificationId}/read")
@@ -49,6 +54,8 @@ public class NotificationController {
     @GetMapping("/unread/count")
     public ResponseEntity<Map<String, Long>> getUnreadCount() {
         long count = notificationService.getUnreadCountAPI();
-        return ResponseEntity.ok(Map.of("count", count));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(10, java.util.concurrent.TimeUnit.SECONDS))
+                .body(Map.of("count", count));
     }
 }
