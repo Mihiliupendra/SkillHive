@@ -12,7 +12,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // Enable a simple in-memory message broker for sending notification messages to clients
+        // Enable a simple in-memory message broker for sending notification messages to
+        // clients
         // /topic is used for broadcasting messages to all connected clients
         // /queue is used for sending messages to specific users
         registry.enableSimpleBroker("/topic", "/queue");
@@ -28,7 +29,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Register STOMP endpoints
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("*")
+                .setAllowedOriginPatterns(
+                        "http://localhost:*", // All localhost ports
+                        "https://*.yourdomain.com" // Your production domains
+                )
+
                 .withSockJS();
     }
 }
