@@ -30,6 +30,7 @@ getNotificationHistory: async (page = 0, size = 10) => {
   // Mark notification as read
   markAsRead: async (notificationId) => {
     try {
+       console.log('Marking as read notificationId:', notificationId); // Add this line
       const response = await api.put(`/api/notifications/${notificationId}/read`);
       return response.data;
     } catch (error) {
