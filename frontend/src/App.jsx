@@ -24,6 +24,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import NotificationIcon from './components/notifications/NotificationIcon';
 import NotificationsPage from './pages/NotificationsPage';
 import websocketService from './services/websocketService';
+import ProjectsLayout from './pages/ProjectsLayout';
 
 
 function AppContent() {
@@ -62,10 +63,10 @@ function AppContent() {
             }
           />
           <Route
-            path="/projects"
+            path="/projects/*"
             element={
               <ProtectedRoute>
-                <div>Projects Page</div>
+                <ProjectsLayout/>
               </ProtectedRoute>
             }
           />
