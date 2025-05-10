@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { commentService } from '../../services/commentService';
 import CommentItem from './CommentItem';
 import CommentForm from './CommentForm';
+import { useAuth } from '../../context/AuthContext'; // adjust path as needed
 
 const CommentSection = ({ postId }) => {
   const [comments, setComments] = useState([]);
@@ -11,6 +12,20 @@ const CommentSection = ({ postId }) => {
   const [hasMore, setHasMore] = useState(true);
   const [showComments, setShowComments] = useState(true); // <-- Add this line
 const [commentCount, setCommentCount] = useState(0);
+const { user: currentUser } = useAuth(); 
+
+
+// Helper to find a comment or reply by id in the tree
+  const findCommentById = (comments, id) => {
+    for (const comment of comments) {
+      if (comment.id === id) return comment;
+      if (comment.replies) {
+        const found = findCommentById(comment.replies, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
 
   const fetchComments = async () => {
     try {
@@ -85,8 +100,24 @@ const handleReply = async (parentCommentId, content) => {
 
 // Correct usage in CommentSection.jsx
 const handleEdit = async (commentId, content) => {
+  // Find the comment or reply in the tree
+  const comment = findCommentById(comments, commentId);
+  if (!comment) {
+    setError('Comment not found');
+    return;
+  }
+
+  // Use userId and userDisplayName from your CommentDTO
+  const ownerId = comment.userId;
+  const ownerName = comment.userDisplayName || 'the owner';
+
+  if (!currentUser || ownerId !== currentUser.id) {
+    setError(`Can't edit comments or replies by ${ownerName}`);
+    return;
+  }
+
   try {
-    const commentDTO = { content, postId }; // Add postId if required by backend
+    const commentDTO = { content, postId };
     const updatedComment = await commentService.editComment(commentId, commentDTO);
     setComments(prev => updateCommentInTree(prev, updatedComment));
   } catch (err) {
@@ -97,10 +128,22 @@ const handleEdit = async (commentId, content) => {
 // ...existing code...
 
   const handleDelete = async (commentId) => {
+    // Find the comment or reply in the tree
+    const comment = findCommentById(comments, commentId);
+    if (!comment) {
+      setError('Comment not found');
+      return;
+    }
+    const ownerId = comment.userId;
+    const ownerName = comment.userDisplayName || 'the owner';
+
+    if (!currentUser || ownerId !== currentUser.id) {
+      setError(`Can't delete comments or replies by ${ownerName}`);
+      return;
+    }
+
     try {
       await commentService.deleteComment(commentId);
-      
-      // Remove the comment from the tree
       setComments(prev => removeCommentFromTree(prev, commentId));
     } catch (err) {
       setError('Failed to delete comment');
