@@ -4,6 +4,8 @@ import com.example.demo.model.Community;
 import com.example.demo.repository.CommunityRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.CommunityService;
+import com.example.demo.service.NotificationService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +19,8 @@ public class CommunityServiceImpl implements CommunityService {
 
     private final CommunityRepository communityRepository;
     private final UserRepository userRepository;
+    @Autowired
+    private NotificationService notificationService;
 
     @Autowired
     public CommunityServiceImpl(CommunityRepository communityRepository, UserRepository userRepository) {
@@ -70,9 +74,25 @@ public class CommunityServiceImpl implements CommunityService {
             Community community = communityOpt.get();
             community.getMemberIds().add(userId);
             communityRepository.save(community);
+
+         // Notify all admins when a new member joins
+        var user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            for (String adminId : community.getAdminIds()) {
+                notificationService.createNotification(
+                    adminId,
+                    userId,
+                    user.getUsername(), // actorName
+                    "COMMUNITY_JOIN",
+                    communityId,
+                    user.getUsername() + " joined your community"
+                );
+            }
+        }
             return true;
         }
         return false;
+        
     }
 
     @Override

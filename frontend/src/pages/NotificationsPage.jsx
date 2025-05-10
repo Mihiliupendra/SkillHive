@@ -37,6 +37,22 @@ const renderIcon = (type) => {
           </svg>
         </span>
       );
+      case 'FRIEND_REQUEST':
+      return (
+        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-50">
+          <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </span>
+      );
+      case 'REPLY':
+      return (
+       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-50">
+        <svg className="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h11a4 4 0 010 8h-1M3 10l4-4m-4 4l4 4" />
+        </svg>
+      </span>
+  );
     default:
       return (
         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100">
@@ -189,9 +205,9 @@ const NotificationsPage = () => {
                       <strong>{notification.actorName || notification.senderName}</strong> joined your community
                     </>
                   )}
-                  {notification.type === 'POST_SHARE' && (
+                  {notification.type === 'FRIEND_REQUEST' && (
                     <>
-                      <strong>{notification.actorName || notification.senderName}</strong> shared your post
+                      <strong>{notification.actorName || notification.senderName}</strong> sent you a friend request
                     </>
                   )}
                 </div>

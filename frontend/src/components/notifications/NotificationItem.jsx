@@ -85,6 +85,12 @@ const NotificationItem = ({ notification, onMarkAsRead }) => {
             <strong>{notification.senderName}</strong> joined your community
           </span>
         );
+      case 'FRIEND_REQUEST':
+        return (
+          <span>
+            <strong>{notification.senderName || notification.actorName}</strong> sent you a friend request
+          </span>
+       );
       case 'POST_SHARE':
         return (
           <span>

@@ -8,9 +8,12 @@ import com.example.demo.repository.*;
 import com.example.demo.dto.SignupRequest;
 import com.example.demo.dto.UserRegistrationDto;
 import com.example.demo.dto.ProfileCompletionDto;
+import com.example.demo.service.NotificationService;
 import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +33,10 @@ public class UserServiceImpl implements UserService {
     private final FollowRepository followRepository;
     private final FriendshipRepository friendshipRepository;
     private final PasswordEncoder encoder;
+
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     @Transactional
@@ -118,6 +125,16 @@ public class UserServiceImpl implements UserService {
         follow.onCreate();
         
         followRepository.save(follow);
+
+        // Send notification to the user being followed
+        notificationService.createNotification(
+            userToFollow.getId(),
+            user.getId(),
+            user.getUsername(), 
+            "FOLLOW",
+            null,
+            user.getUsername() + " started following you"
+        );
     }
 
     @Override
@@ -186,6 +203,16 @@ public class UserServiceImpl implements UserService {
         request.onCreate();
         
         friendRequestRepository.save(request);
+
+        notificationService.createNotification(
+            receiver.getId(),
+            sender.getId(),
+            sender.getUsername(), 
+            "FRIEND_REQUEST",
+            request.getId(),
+            sender.getUsername() + " sent you a friend request"
+        );
+        
     }
 
     @Override
