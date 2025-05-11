@@ -40,9 +40,7 @@ const Profile = () => {
       
       if (!userId) {
         throw new Error('No user ID provided');
-      }
-
-      console.log('Fetching profile for userId:', userId);
+      }      console.log('Fetching profile for userId:', userId);
       const [profileResponse, followingResponse] = await Promise.all([
         axios.get(`/api/users/${userId}/profile`),
         currentUser && userId !== currentUser.id 
@@ -64,6 +62,19 @@ const Profile = () => {
       };
 
       setProfileData(transformedData);
+      
+      // Check if the current user is following this profile
+      if (currentUser && userId !== currentUser.id && followingResponse.data) {
+        const followingData = Array.isArray(followingResponse.data) 
+          ? followingResponse.data 
+          : followingResponse.data.content || [];
+          
+        const isFollowingUser = followingData.some(user => 
+          user.id === userId || user._id === userId
+        );
+        console.log('Is current user following this profile:', isFollowingUser);
+        setIsFollowing(isFollowingUser);
+      }
 
       // Check both friend request status and friendship status
       if (currentUser && userId !== currentUser.id) {
@@ -120,22 +131,34 @@ const Profile = () => {
       setLoading(false);
     }
   };
-
   const handleFollow = async () => {
     if (!currentUser || !userId) return;
     
     setFollowLoading(true);
     try {
       if (!isFollowing) {
+        // Follow the user
         await axios.post(`/api/users/${currentUser.id}/follow/${userId}`);
         setIsFollowing(true);
-        // Refresh profile data to get updated following status
-        await fetchUserProfile();
       } else {
+        // Unfollow the user
         await axios.post(`/api/users/${currentUser.id}/unfollow/${userId}`);
         setIsFollowing(false);
-        // Refresh profile data to get updated following status
-        await fetchUserProfile();
+      }
+      
+      // Fetch the updated following list to ensure UI is in sync with backend state
+      const followingResponse = await axios.get(`/api/users/${currentUser.id}/following`);
+      const followingData = Array.isArray(followingResponse.data) 
+        ? followingResponse.data 
+        : followingResponse.data.content || [];
+        
+      const isFollowingUser = followingData.some(user => 
+        user.id === userId || user._id === userId
+      );
+      
+      // Set the state based on the latest data from the server
+      if (isFollowingUser !== isFollowing) {
+        setIsFollowing(isFollowingUser);
       }
     } catch (err) {
       console.error('Follow/unfollow action failed:', err);
