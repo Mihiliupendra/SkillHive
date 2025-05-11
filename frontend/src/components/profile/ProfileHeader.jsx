@@ -104,18 +104,19 @@ export default function ProfileHeader({
                   variant={isFollowing ? "outlined" : "contained"}
                   onClick={onFollow}
                   disabled={followLoading}
-                  startIcon={followLoading ? <CircularProgress size={20} /> : <PersonAdd />}
+                  startIcon={followLoading ? <CircularProgress size={20} /> : isFollowing ? null : <PersonAdd />}
                   sx={{
                     backgroundColor: isFollowing ? 'transparent' : '#F7931E',
                     borderColor: '#F7931E',
                     color: isFollowing ? '#F7931E' : 'white',
                     '&:hover': {
-                      backgroundColor: isFollowing ? 'rgba(247, 147, 30, 0.04)' : '#e07b0d',
-                      borderColor: '#e07b0d'
+                      backgroundColor: isFollowing ? 'rgba(244, 67, 54, 0.04)' : '#e07b0d',
+                      borderColor: isFollowing ? '#f44336' : '#e07b0d',
+                      color: isFollowing ? '#f44336' : 'white',
                     }
                   }}
                 >
-                  {isFollowing ? 'Following' : 'Follow'}
+                  {followLoading ? 'Processing...' : isFollowing ? 'Unfollow' : 'Follow'}
                 </Button>
               )}
               {/* Show Add Friend button if not friends */}
