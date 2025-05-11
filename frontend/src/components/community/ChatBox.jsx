@@ -466,7 +466,7 @@ const ChatBox = ({ communityId, sx }) => {
       {connectionError && (
         <Fade in={connectionError}>
           <Alert 
-            severity="warning" 
+            severity="success" 
             variant="filled"
             sx={{ 
               m: 1, 
@@ -475,20 +475,37 @@ const ChatBox = ({ communityId, sx }) => {
               bgcolor: themeColors.warning,
               color: themeColors.white,
               py: 0.5,
+              maxWidth: '100%',
+              overflow: 'hidden',
               '& .MuiAlert-message': { 
                 display: 'flex', 
-                justifyContent: 'space-between',
                 alignItems: 'center',
                 width: '100%',
                 fontWeight: 500,
-                fontSize: '0.85rem'
+                fontSize: '0.85rem',
+                overflow: 'hidden'
               },
               '& .MuiAlert-icon': {
                 color: themeColors.white
               }
             }}
-          >
-            <span>Chat connection lost. Some features may be limited.</span>
+          >            <Box sx={{ 
+              overflow: 'hidden',
+              maxWidth: '100%',
+              width: '100%'
+            }}>              
+            <span style={{ 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'normal',
+                wordWrap: 'break-word',
+                maxWidth: '100%',
+                display: 'block'
+              }}>
+                Hey!!! Welcome Back 😊 Remember you’re doing better than you think. Don’t rush the process, just trust your grind. 🌱✨
+
+            </span>
+            </Box>
           </Alert>
         </Fade>
       )}
@@ -647,13 +664,20 @@ const ChatBox = ({ communityId, sx }) => {
         <Alert 
           onClose={handleCloseSnackbar} 
           severity={snackbarSeverity} 
-          variant="filled"
-          sx={{ 
+          variant="filled"          sx={{ 
             width: '100%', 
             borderRadius: '12px',
             bgcolor: snackbarSeverity === 'error' ? themeColors.error : themeColors.accent,
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            fontWeight: 500
+            fontWeight: 500,
+            maxWidth: '90vw',
+            overflow: 'hidden',
+            '& .MuiAlert-message': {
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'normal',
+              wordWrap: 'break-word'
+            }
           }}
         >
           {snackbarMessage}

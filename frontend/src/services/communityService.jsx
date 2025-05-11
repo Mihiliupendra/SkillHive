@@ -2,7 +2,7 @@
 import axios from '../api/axios';
 
 const API_URL = '/api/v1/communities';
-const FEED_POST_URL = '/api/v1/feed-posts';
+const FEED_POST_URL = '/api/feed-posts';
 
 export const CommunityService = {
   // Main community endpoint with all filtering capabilities
@@ -35,14 +35,38 @@ export const CommunityService = {
   // Member management
   getCommunityMembers: (communityId) => {
     return axios.get(`${API_URL}/${communityId}/members`);
-  },
-
-  addMember: (communityId, userId) => {
-    return axios.post(`${API_URL}/${communityId}/members/${userId}`);
-  },
-
-  removeMember: (communityId, userId) => {
-    return axios.delete(`${API_URL}/${communityId}/members/${userId}`);
+  },  addMember: (communityId, userId) => {
+    // Add authorization headers explicitly to ensure token is included
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    const currentUser = JSON.parse(localStorage.getItem('user'));
+    
+    // Use the self-join endpoint when the current user is joining themselves
+    if (currentUser && (userId === currentUser.id)) {
+      console.log('Using self-join endpoint for current user');
+      return axios.post(`${API_URL}/${communityId}/members/me`, {}, { headers });
+    } else {
+      // Admin adding another user
+      console.log('Using admin endpoint to add user:', userId);
+      return axios.post(`${API_URL}/${communityId}/members/${userId}`, {}, { headers });
+    }
+  },  removeMember: (communityId, userId) => {
+    // Add authorization headers explicitly to ensure token is included
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    const currentUser = JSON.parse(localStorage.getItem('user'));
+    
+    // Use the self-remove endpoint when the current user is removing themselves
+    if (currentUser && (userId === currentUser.id)) {
+      console.log('Using self-remove endpoint for current user');
+      return axios.delete(`${API_URL}/${communityId}/members/me`, { headers });
+    } else {
+      // Admin removing another user
+      console.log('Using admin endpoint to remove user:', userId);
+      return axios.delete(`${API_URL}/${communityId}/members/${userId}`, { headers });
+    }
   },
 
   // Admin management

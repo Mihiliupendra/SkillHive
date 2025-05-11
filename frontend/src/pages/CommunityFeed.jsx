@@ -456,29 +456,72 @@ const CommunityFeed = () => {
       setPostsLoading(false);
     }
   };
-
   const handleJoinCommunity = async () => {
     if (!user) return;
     try {
       console.log(`User ${user.id} joining community ${communityId}`);
+      
+      // Check if token exists before making request
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn("No authentication token found. User may need to log in again.");
+        // You could redirect to login or show a message here
+        return;
+      }
+      
       await CommunityService.addMember(communityId, user.id);
       setIsMember(true);
       fetchCommunityDetails();
     } catch (error) {
       console.error('Error joining community:', error);
+      
+      // Show more detailed error information
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.log("Error response data:", error.response.data);
+        console.log("Error response status:", error.response.status);
+        console.log("Error response headers:", error.response.headers);
+        
+        // Handle specific status codes
+        if (error.response.status === 403) {
+          console.log("Access forbidden - you may not have permission to join this community");
+          // You could display a more user-friendly message here
+        }
+      }
     }
   };
-
   const handleLeaveCommunity = async () => {
     if (!user) return;
     try {
       console.log(`User ${user.id} leaving community ${communityId}`);
+      
+      // Check if token exists before making request
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn("No authentication token found. User may need to log in again.");
+        // You could redirect to login or show a message here
+        return;
+      }
+      
       await CommunityService.removeMember(communityId, user.id);
       setIsMember(false);
       setIsAdmin(false);
       fetchCommunityDetails();
     } catch (error) {
       console.error('Error leaving community:', error);
+      
+      // Show more detailed error information
+      if (error.response) {
+        console.log("Error response data:", error.response.data);
+        console.log("Error response status:", error.response.status);
+        
+        // Handle specific status codes
+        if (error.response.status === 403) {
+          console.log("Access forbidden - you may not have permission to leave this community");
+          // You could display a more user-friendly message here
+        }
+      }
     }
   };
 
@@ -892,12 +935,7 @@ const CommunityFeed = () => {
                 }
               }}
             >
-              <Tab 
-                value="posts" 
-                label="Posts" 
-                icon={<ForumIcon />} 
-                iconPosition="start"
-              />
+              
               <Tab 
                 value="chat" 
                 label="Live Chat" 
@@ -907,120 +945,7 @@ const CommunityFeed = () => {
             </Tabs>
           </SectionPaper>
 
-          {activeTab === 'posts' && (
-            <>
-              {isMember && (
-                <SectionPaper sx={{ mb: 3 }}>
-                  <SectionTitle variant="h6">
-                    <DescriptionIcon sx={{ color: themeColors.primary }} />
-                    <Box component="span">Create New Post</Box>
-                  </SectionTitle>
-                  <Box sx={{ p: 2 }}>
-                    <CreatePostForm 
-                      communityId={communityId} 
-                      onPostCreated={fetchCommunityPosts} 
-                      sx={{
-                        '& .MuiTextField-root': {
-                          background: themeColors.white,
-                          borderRadius: '10px',
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: alpha(themeColors.primary, 0.2)
-                            },
-                            '&:hover fieldset': {
-                              borderColor: themeColors.primary
-                            }
-                          }
-                        },
-                        '& .MuiButton-root': {
-                          background: themeColors.accent,
-                          color: themeColors.white,
-                          '&:hover': {
-                            background: alpha(themeColors.accent, 0.9)
-                          }
-                        }
-                      }}
-                    />
-                  </Box>
-                </SectionPaper>
-              )}
-              
-              <SectionPaper>
-                <SectionTitle variant="h6">
-                  <ForumIcon sx={{ color: themeColors.primary }} />
-                  <Box component="span">Community Discussions</Box>
-                </SectionTitle>
-                <Box sx={{ p: 2 }}>
-                  {postsLoading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
-                      <CircularProgress size={40} sx={{ color: themeColors.accent }} />
-                    </Box>
-                  ) : posts && posts.length > 0 ? (
-                    <>
-                      {posts.map((post, index) => (
-                        <Box key={post.id} sx={{ mb: index < posts.length - 1 ? 3 : 0 }}>
-                          <PostCard 
-                            post={post} 
-                            sx={{
-                              borderRadius: '12px',
-                              boxShadow: '0 4px 16px rgba(0, 43, 91, 0.06)',
-                              border: `1px solid ${alpha(themeColors.primary, 0.1)}`,
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                boxShadow: '0 8px 24px rgba(0, 43, 91, 0.1)',
-                                transform: 'translateY(-4px)'
-                              }
-                            }}
-                          />
-                        </Box>
-                      ))}
-                      {totalPages > 1 && (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                          <Pagination 
-                            count={totalPages} 
-                            page={page + 1} 
-                            onChange={handlePageChange}
-                            sx={{
-                              '& .MuiPaginationItem-root': {
-                                fontWeight: 600,
-                                transition: 'all 0.2s ease',
-                                '&.Mui-selected': {
-                                  background: themeColors.accent,
-                                  color: themeColors.white
-                                },
-                                '&:hover': {
-                                  background: alpha(themeColors.primary, 0.1)
-                                }
-                              }
-                            }}
-                          />
-                        </Box>
-                      )}
-                    </>
-                  ) : (
-                    <EmptyStatePaper>
-                      <ForumIcon sx={{ fontSize: 60, color: themeColors.accent, mb: 2 }} />
-                      <Typography variant="h6" sx={{ color: themeColors.primaryDark, mb: 2, fontWeight: 700 }}>
-                        No posts yet in this community
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: '80%' }}>
-                        Be the first to share something with the community. Start a discussion, ask a question, or share resources.
-                      </Typography>
-                      {isMember && (
-                        <StyledButton 
-                          variant="contained"
-                          sx={{ background: themeColors.accent, color: themeColors.white }}
-                        >
-                          Create your first post
-                        </StyledButton>
-                      )}
-                    </EmptyStatePaper>
-                  )}
-                </Box>
-              </SectionPaper>
-            </>
-          )}
-
+          
           {activeTab === 'chat' && (
             <SectionPaper sx={{ 
               height: 'auto', 
